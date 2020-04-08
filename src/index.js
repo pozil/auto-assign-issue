@@ -25,12 +25,13 @@ const run = async () => {
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
+    const repoFullNameParts = repository.full_name.split('/');
 
     // Assign issue
     console.log(`Assigning issue ${issue.number} to ${assigneeType} ${assignee}`);
     await octokit.issues.addAssignees({
-        owner: repository.owner,
-        repo: repository.name,
+        owner: repoFullNameParts[0],
+        repo: repoFullNameParts[0],
         issue_number: issue.number,
         assignees: [assignee]
     });
