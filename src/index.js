@@ -20,18 +20,18 @@ const run = async () => {
     // Show context
     console.log(JSON.stringify(github.context, undefined, 2));
 
-    // Get issue info
-    const { issue } = github.context.payload;
+    // Get repo and issue info
+    const { repository, issue } = github.context.payload;
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
-    const { issueNodeId } = issue;
 
     // Assign issue
-    console.log(`Assigning issue ${issueNodeId} to ${assigneeType} ${assignee}`);
+    console.log(`Assigning issue ${issue.number} to ${assigneeType} ${assignee}`);
     await octokit.issues.addAssignees({
-        ...github.context.repo,
-        issue_number: issueNodeId,
+        owner: repository.owner,
+        repo: repository.name,
+        issue_number: issue.number,
         assignees: [assignee]
     });
 };
