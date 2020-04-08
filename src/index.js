@@ -17,9 +17,6 @@ const run = async () => {
     const assigneeType = user ? 'user' : 'team';
     const assignee = user ? user : team;
 
-    // Show context
-    console.log(JSON.stringify(github.context, undefined, 2));
-
     // Get repo and issue info
     const { repository, issue } = github.context.payload;
     if (!issue) {
@@ -29,12 +26,22 @@ const run = async () => {
 
     // Assign issue
     console.log(`Assigning issue ${issue.number} to ${assigneeType} ${assignee}`);
-    await octokit.issues.addAssignees({
+    console.log(JSON.stringify({
         owner: repoFullNameParts[0],
         repo: repoFullNameParts[0],
         issue_number: issue.number,
         assignees: [assignee]
-    });
+    }, undefined, 2));
+    try {
+        await octokit.issues.addAssignees({
+            owner: repoFullNameParts[0],
+            repo: repoFullNameParts[0],
+            issue_number: issue.number,
+            assignees: [assignee]
+        });
+    } catch (error) {
+        core.setFailed(error.message);
+    }
 };
 
 try {
