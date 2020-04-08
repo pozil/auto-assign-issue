@@ -8,3 +8,7 @@ inputs:
 runs:
     using: 'node12'
     main: 'src/index.js'
+
+branding:
+    icon: 'alert-circle'
+    color: 'red'
