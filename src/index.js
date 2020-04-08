@@ -9,7 +9,7 @@ const run = async () => {
     // Get issue assignee
     const team = core.getInput('team');
     const user = core.getInput('user');
-    if ((team && user) || !(team && user)) {
+    if ((team && user) || (!team && !user)) {
         throw new Error(
             'One and only one of "team" or "user" parameters must be specified'
         );
