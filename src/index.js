@@ -27,7 +27,7 @@ const run = async () => {
     if (assigneeType === 'user') {
         assignees = [user];
     } else {
-        assignees = await getTeamMemberNames(octokit, repository, team);
+        assignees = await getTeamMemberNames(octokit, repoFullNameParts[0], team);
     }
 
     // Assign issue
@@ -48,10 +48,10 @@ const run = async () => {
     }
 };
 
-const getTeamMemberNames = async (octokit, repository, teamName) => {
+const getTeamMemberNames = async (octokit, org, teamName) => {
     try {
         const members = await octokit.teams.listMembersInOrg({
-            org: repository.owner.name,
+            org,
             team_slug: teamName
         });
         console.log(JSON.stringify(members, null, 2));
