@@ -11,21 +11,24 @@ const run = async () => {
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
-    const repoFullNameParts = repository.full_name.split('/');
+    const [owner, repo] = repository.full_name.split('/');
 
-    // Get issue assignee
-    const user = core.getInput('user', { required: true });
+    // Get issue assignees
+    const assigneesString = core.getInput('assignees', { required: true });
+    const assignees = assigneesString
+        .split(',')
+        .map((assigneeName) => assigneeName.trim());
 
     // Assign issue
     console.log(
-        `Assigning issue ${issue.number} to user ${user}`
+        `Assigning issue ${issue.number} to users ${JSON.stringify(assignees)}`
     );
     try {
         await octokit.issues.addAssignees({
-            owner: repoFullNameParts[0],
-            repo: repoFullNameParts[1],
+            owner,
+            repo,
             issue_number: issue.number,
-            assignees: [ user ]
+            assignees
         });
     } catch (error) {
         core.setFailed(error.message);

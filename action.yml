@@ -1,8 +1,8 @@
 name: 'Auto-assign Issue'
-description: 'Auto-assigns issues to a user'
+description: 'Auto-assigns issues to users'
 inputs:
-    user:
-        description: 'User that will be assigned to the issue'
+    assignees:
+        description: 'Comma separated list of user names'
         required: true
 
 runs:

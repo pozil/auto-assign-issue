@@ -1,7 +1,8 @@
 {
     "name": "auto-assign-issue",
     "version": "1.0.0",
-    "description": "GitHub action that auto-assigns issues to a user",
+    "private": true,
+    "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
     "scripts": {
         "lint": "eslint src/**",
@@ -16,7 +17,7 @@
         "github",
         "action",
         "issue",
-        "team"
+        "assign"
     ],
     "author": "Philippe Ozil (pozil)",
     "license": "CC0-1.0",
