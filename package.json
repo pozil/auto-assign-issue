@@ -1,0 +1,35 @@
+{
+    "name": "auto-assign-issue",
+    "version": "1.0.0",
+    "description": "GitHub action that auto-assigns issues to a team or user",
+    "main": "src/index.js",
+    "scripts": {
+        "lint": "eslint src/**",
+        "prettier": "prettier --write \"**/*.{html,js,json,md,yaml,yml}\"",
+        "prettier:verify": "prettier --list-different \"**/*.{html,js,json,md,yaml,yml}\""
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pozil/auto-assign-issue.git"
+    },
+    "keywords": [
+        "github",
+        "action",
+        "issue",
+        "team"
+    ],
+    "author": "Philippe Ozil (pozil)",
+    "license": "CC0-1.0",
+    "bugs": {
+        "url": "https://github.com/pozil/auto-assign-issue/issues"
+    },
+    "homepage": "https://github.com/pozil/auto-assign-issue#readme",
+    "dependencies": {
+        "@actions/core": "^1.2.3",
+        "@actions/github": "^2.1.1"
+    },
+    "devDependencies": {
+        "eslint": "^6.8.0",
+        "prettier": "^2.0.4"
+    }
+}
