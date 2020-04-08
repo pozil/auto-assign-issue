@@ -14,7 +14,11 @@ const run = async () => {
             'One and only one of "team" or "user" parameters must be specified'
         );
     }
+    const assigneeType = user ? 'user' : 'team';
     const assignee = user ? user : team;
+
+    // Show context
+    console.log(JSON.stringify(github.context, undefined, 2));
 
     // Get issue info
     const { issue } = github.context.payload;
@@ -24,9 +28,9 @@ const run = async () => {
     const { issueNodeId } = issue;
 
     // Assign issue
-    console.log(`Assigning issue ${issueNodeId} to team ${team}`);
+    console.log(`Assigning issue ${issueNodeId} to ${assigneeType} ${assignee}`);
     await octokit.issues.addAssignees({
-        ...context.repo,
+        ...github.context.repo,
         issue_number: issueNodeId,
         assignees: [assignee]
     });
