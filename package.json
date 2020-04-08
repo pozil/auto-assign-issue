@@ -1,7 +1,7 @@
 {
     "name": "auto-assign-issue",
     "version": "1.0.0",
-    "description": "GitHub action that auto-assigns issues to a team or user",
+    "description": "GitHub action that auto-assigns issues to a user",
     "main": "src/index.js",
     "scripts": {
         "lint": "eslint src/**",

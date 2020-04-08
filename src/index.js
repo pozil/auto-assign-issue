@@ -13,51 +13,22 @@ const run = async () => {
     }
     const repoFullNameParts = repository.full_name.split('/');
 
-    // Get and validate issue assignee paramters
-    const team = core.getInput('team');
-    const user = core.getInput('user');
-    if ((team && user) || (!team && !user)) {
-        throw new Error(
-            'One and only one of "team" or "user" parameters must be specified'
-        );
-    }
-    // Get assignees
-    const assigneeType = user ? 'user' : 'team';
-    let assignees;
-    if (assigneeType === 'user') {
-        assignees = [user];
-    } else {
-        assignees = await getTeamMemberNames(octokit, repoFullNameParts[0], team);
-    }
+    // Get issue assignee
+    const user = core.getInput('user', { required: true });
 
     // Assign issue
     console.log(
-        `Assigning issue ${issue.number} to ${assigneeType} ${
-            assigneeType === 'user' ? user : team
-        }`
+        `Assigning issue ${issue.number} to user ${user}`
     );
     try {
         await octokit.issues.addAssignees({
             owner: repoFullNameParts[0],
             repo: repoFullNameParts[1],
             issue_number: issue.number,
-            assignees
+            assignees: [ user ]
         });
     } catch (error) {
         core.setFailed(error.message);
-    }
-};
-
-const getTeamMemberNames = async (octokit, org, teamName) => {
-    try {
-        const members = await octokit.teams.listMembersInOrg({
-            org,
-            team_slug: teamName
-        });
-        console.log(JSON.stringify(members, null, 2));
-        return members.map(member => member.login);
-    } catch (error) {
-        throw error;
     }
 };
 

@@ -1,10 +1,10 @@
 name: 'Auto-assign Issue'
-description: 'Auto-assigns issues to a team or user'
+description: 'Auto-assigns issues to a user'
 inputs:
     user:
         description: 'User that will be assigned to the issue'
-    team:
-        description: 'Team that will be assigned to the issue'
+        required: true
+
 runs:
     using: 'node12'
     main: 'src/index.js'
