@@ -1,6 +1,9 @@
 name: 'Auto-assign Issue'
 description: 'Auto-assigns issues to users'
 inputs:
+    repo-token:
+        description: 'The GITHUB_TOKEN, neede to update the Issue'
+        required: true
     assignees:
         description: 'Comma separated list of user names'
         required: true
