@@ -2,9 +2,10 @@
 
 ## Inputs
 
-| Parameter   | Required | Description                                                                |
-| ----------- | -------- | -------------------------------------------------------------------------- |
-| `assignees` | true     | Comma separated list of user names. Issue will be assigned to those users. |
+| Parameter    | Required | Description                                                                |
+| ------------ | -------- | -------------------------------------------------------------------------- |
+| `repo-token` | true     | The GITHUB_TOKEN, needed to update the Issue.                              |
+| `assignees`  | true     | Comma separated list of user names. Issue will be assigned to those users. |
 
 ## Example usage
 
