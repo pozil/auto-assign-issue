@@ -3,7 +3,7 @@ description: 'Auto-assigns issues to users'
 inputs:
     repo-token:
         description: 'The GITHUB_TOKEN, needed to update the Issue'
-        required: true
+        default: ${{ github.token }}
     assignees:
         description: 'Comma separated list of user names'
         required: true
