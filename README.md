@@ -25,7 +25,7 @@ jobs:
             - name: 'Auto-assign issue'
               uses: pozil/auto-assign-issue@v1
               with:
-                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  repo-token: ${{ github.token }}
                   assignees: octocat
 ```
 

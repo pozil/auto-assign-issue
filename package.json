@@ -1,6 +1,6 @@
 {
     "name": "auto-assign-issue",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
@@ -26,11 +26,11 @@
     },
     "homepage": "https://github.com/pozil/auto-assign-issue#readme",
     "dependencies": {
-        "@actions/core": "^1.2.6",
-        "@actions/github": "^4.0.0"
+        "@actions/core": "^1.5.0",
+        "@actions/github": "^5.0.0"
     },
     "devDependencies": {
-        "eslint": "^7.11.0",
-        "prettier": "^2.1.2"
+        "eslint": "^7.32.0",
+        "prettier": "^2.3.2"
     }
 }
