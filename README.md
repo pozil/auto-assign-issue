@@ -2,10 +2,9 @@
 
 ## Inputs
 
-| Parameter    | Required | Description                                                                |
-| ------------ | -------- | -------------------------------------------------------------------------- |
-| `repo-token` | true     | The GITHUB_TOKEN, needed to update the Issue.                              |
-| `assignees`  | true     | Comma separated list of user names. Issue will be assigned to those users. |
+| Parameter   | Required | Description                                                                |
+| ----------- | -------- | -------------------------------------------------------------------------- |
+| `assignees` | true     | Comma separated list of user names. Issue will be assigned to those users. |
 
 ## Example usage
 
@@ -25,7 +24,6 @@ jobs:
             - name: 'Auto-assign issue'
               uses: pozil/auto-assign-issue@v1
               with:
-                  repo-token: ${{ github.token }}
                   assignees: octocat
 ```
 
