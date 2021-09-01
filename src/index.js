@@ -24,7 +24,7 @@ const run = async () => {
         `Assigning issue ${issue.number} to users ${JSON.stringify(assignees)}`
     );
     try {
-        await octokit.issues.addAssignees({
+        await octokit.rest.issues.addAssignees({
             owner,
             repo,
             issue_number: issue.number,
