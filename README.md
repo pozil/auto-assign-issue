@@ -3,7 +3,7 @@
 ## Inputs
 
 | Parameter       | Required | Description                                                                |
-| --------------- | -------- | ---------------------------------------------------------------------------|
+| --------------- | -------- | -------------------------------------------------------------------------- |
 | `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users. |
 | `numOfAssignee` | false    | Number of required assignee. Assign all users if not set.                  |
 
