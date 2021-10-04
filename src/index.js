@@ -1,6 +1,24 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 
+const pickRandomFromArray = (arr) => {
+    if (arr.length === 0) {
+      throw new Error('Can not pick random from empty list.')
+    }
+
+    return arr[Math.floor(Math.random() * arr.length)]
+}
+
+const pickNRandomFromArray = (arr, n) => {
+    const result = []
+    for (let i = 0; i < n; i++) {
+      const arrayWithoutPickedOnes = arr.filter((a) => !result.includes(a))
+      const newRandom = pickRandomFromArray(arrayWithoutPickedOnes)
+      result.push(newRandom)
+    }
+    return result
+}
+
 const run = async () => {
     // Get octokit
     const gitHubToken = core.getInput('repo-token', { required: true });
@@ -15,9 +33,18 @@ const run = async () => {
 
     // Get issue assignees
     const assigneesString = core.getInput('assignees', { required: true });
-    const assignees = assigneesString
+    let assignees = assigneesString
         .split(',')
         .map((assigneeName) => assigneeName.trim());
+
+    const numOfAssigneeString = core.getInput('numOfAssignee', { require: false });
+    if (numOfAssigneeString) {
+        const numOfAssignee = parseInt(numOfAssigneeString, 10);
+        if (isNaN(numOfAssignee)) {
+            throw new Error(`Invalid numOfAssignee`);
+        }
+        assignees = pickNRandomFromArray(assignees, numOfAssignee);
+    }
 
     // Assign issue
     console.log(

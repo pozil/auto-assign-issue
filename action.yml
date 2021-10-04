@@ -7,6 +7,9 @@ inputs:
     assignees:
         description: 'Comma separated list of user names'
         required: true
+    numOfAssignee:
+        description: 'Number of assignee'
+        required: false
 
 runs:
     using: 'node12'
