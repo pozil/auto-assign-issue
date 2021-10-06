@@ -2,10 +2,10 @@
 
 ## Inputs
 
-| Parameter       | Required | Description                                                                    |
-| --------------- | -------- | ------------------------------------------------------------------------------ |
-| `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users.     |
-| `numOfAssignee` | false    | Number of assignee that will be randomly picked. Assigns all users if not set. |
+| Parameter       | Required | Description                                                                                             |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users.                              |
+| `numOfAssignee` | false    | Number of assignees that will be randomly picked from `assignees`. If not specified, assigns all users. |
 
 ## Example usage
 
