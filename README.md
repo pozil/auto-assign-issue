@@ -2,10 +2,10 @@
 
 ## Inputs
 
-| Parameter       | Required | Description                                                                |
-| --------------- | -------- | -------------------------------------------------------------------------- |
-| `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users. |
-| `numOfAssignee` | false    | Number of required assignee. Assign all users if not set.                  |
+| Parameter       | Required | Description                                                                    |
+| --------------- | -------- | ------------------------------------------------------------------------------ |
+| `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users.     |
+| `numOfAssignee` | false    | Number of assignee that will be randomly picked. Assigns all users if not set. |
 
 ## Example usage
 
@@ -26,7 +26,7 @@ jobs:
               uses: pozil/auto-assign-issue@v1
               with:
                   assignees: octocat,cat,dog
-                  numOfAssignee: 1
+                  numOfAssignee: 2
 ```
 
 ### Specifying a dynamic user
