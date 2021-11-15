@@ -9,7 +9,7 @@
 
 ## Example usage
 
-Here's an example flow that auto-assigns all new issues to the `octocat` user:
+Here's an example flow that auto-assigns all new issues to two users randomly chosen from `octocat`, `cat` and `dog` :
 
 ```yml
 name: Issue assignment
