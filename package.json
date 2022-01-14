@@ -8,7 +8,19 @@
         "lint": "eslint src/**",
         "prettier": "prettier --write \"**/*.{html,js,json,md,yaml,yml}\"",
         "prettier:verify": "prettier --list-different \"**/*.{html,js,json,md,yaml,yml}\"",
-        "test": "jest"
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "postinstall": "husky install",
+        "precommit": "lint-staged"
+    },
+    "lint-staged": {
+        "!(node_modules/**/*)*.{html,js,json,md,yaml,yml}": [
+            "prettier --write"
+        ],
+        "/src/**/*.js": [
+            "eslint",
+            "jest --bail --findRelatedTests"
+        ]
     },
     "repository": {
         "type": "git",
@@ -32,7 +44,9 @@
     },
     "devDependencies": {
         "eslint": "^8.6.0",
+        "husky": "^7.0.4",
         "jest": "^27.4.7",
+        "lint-staged": "^12.1.7",
         "prettier": "^2.5.1"
     },
     "engines": {
