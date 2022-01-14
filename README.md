@@ -1,13 +1,14 @@
-# GitHub action that auto-assigns issues to users
+# GitHub action that auto-assigns issues to users or team members
 
 ## Inputs
 
-| Parameter       | Required | Description                                                                                             |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `assignees`     | true     | Comma separated list of user names. Issue will be assigned to those users.                              |
-| `numOfAssignee` | false    | Number of assignees that will be randomly picked from `assignees`. If not specified, assigns all users. |
+| Parameter       | Required                             | Description                                                                                                        |
+| --------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `assignees`     | only if `teams` is not specified     | Comma separated list of user names. Issue will be assigned to those users.                                         |
+| `teams`         | only if `assignees` is not specified | Comma separated list of teams. Issue will be assigned to the team members.                                         |
+| `numOfAssignee` | false                                | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users. |
 
-## Example usage
+## Examples
 
 Here's an example flow that auto-assigns all new issues to two users randomly chosen from `octocat`, `cat` and `dog` :
 
@@ -23,10 +24,20 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: 'Auto-assign issue'
-              uses: pozil/auto-assign-issue@v1.1.0
+              uses: pozil/auto-assign-issue@v1.2.0
               with:
                   assignees: octocat,cat,dog
                   numOfAssignee: 2
+```
+
+This other configuration assigns issues to a random member of the `support` team:
+
+```yml
+- name: 'Auto-assign issue'
+    uses: pozil/auto-assign-issue@v1.2.0
+    with:
+        teams: support
+        numOfAssignee: 1
 ```
 
 ### Specifying a dynamic user

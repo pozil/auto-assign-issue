@@ -11,4 +11,7 @@ ehthumbs.db
 $RECYCLE.BIN/
 
 # VS Code project settings
-.vscode/
+/.vscode
+
+# Code coverage reports
+/coverage
