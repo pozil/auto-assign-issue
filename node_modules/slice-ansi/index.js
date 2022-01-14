@@ -1,7 +1,7 @@
-'use strict';
-const isFullwidthCodePoint = require('is-fullwidth-code-point');
-const astralRegex = require('astral-regex');
-const ansiStyles = require('ansi-styles');
+import isFullwidthCodePoint from 'is-fullwidth-code-point';
+import ansiStyles from 'ansi-styles';
+
+const astralRegex = /^[\uD800-\uDBFF][\uDC00-\uDFFF]$/;
 
 const ESCAPES = [
 	'\u001B',
@@ -41,6 +41,8 @@ const checkAnsi = (ansiCodes, isEscapes, endAnsiCode) => {
 
 		if (endAnsiCode !== undefined) {
 			const fistEscapeCode = wrapAnsi(ansiStyles.codes.get(Number.parseInt(endAnsiCode, 10)));
+			// TODO: Remove the use of `.reduce` here.
+			// eslint-disable-next-line unicorn/no-array-reduce
 			output = output.reduce((current, next) => next === fistEscapeCode ? [next, ...current] : [...current, next], []);
 		}
 	}
@@ -48,7 +50,7 @@ const checkAnsi = (ansiCodes, isEscapes, endAnsiCode) => {
 	return output.join('');
 };
 
-module.exports = (string, begin, end) => {
+export default function sliceAnsi(string, begin, end) {
 	const characters = [...string];
 	const ansiCodes = [];
 
@@ -81,7 +83,7 @@ module.exports = (string, begin, end) => {
 			visible++;
 		}
 
-		if (!astralRegex({exact: true}).test(character) && isFullwidthCodePoint(character.codePointAt())) {
+		if (!astralRegex.test(character) && isFullwidthCodePoint(character.codePointAt())) {
 			visible++;
 
 			if (typeof end !== 'number') {
@@ -100,4 +102,4 @@ module.exports = (string, begin, end) => {
 	}
 
 	return output;
-};
+}

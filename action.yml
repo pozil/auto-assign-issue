@@ -1,18 +1,21 @@
 name: 'Auto-assign Issue'
-description: 'Auto-assigns issues to users'
+description: 'Auto-assigns issues to users or team members'
 inputs:
     repo-token:
         description: 'The GITHUB_TOKEN, needed to update the Issue'
         default: ${{ github.token }}
     assignees:
-        description: 'Comma separated list of user names'
-        required: true
+        description: 'Comma separated list of user names. Required if teams is not specified.'
+        required: false
+    teams:
+        description: 'Comma separated list of team names. Required if assignees is not specified.'
+        required: false
     numOfAssignee:
-        description: 'Number of assignee'
+        description: 'Number of random assignee'
         required: false
 
 runs:
-    using: 'node12'
+    using: 'node14'
     main: 'src/index.js'
 
 branding:

@@ -1,13 +1,26 @@
 {
     "name": "auto-assign-issue",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
     "scripts": {
         "lint": "eslint src/**",
         "prettier": "prettier --write \"**/*.{html,js,json,md,yaml,yml}\"",
-        "prettier:verify": "prettier --list-different \"**/*.{html,js,json,md,yaml,yml}\""
+        "prettier:verify": "prettier --list-different \"**/*.{html,js,json,md,yaml,yml}\"",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "postinstall": "husky install",
+        "precommit": "lint-staged"
+    },
+    "lint-staged": {
+        "!(node_modules/**/*)*.{html,js,json,md,yaml,yml}": [
+            "prettier --write"
+        ],
+        "/src/**/*.js": [
+            "eslint",
+            "jest --bail --findRelatedTests"
+        ]
     },
     "repository": {
         "type": "git",
@@ -30,7 +43,13 @@
         "@actions/github": "^5.0.0"
     },
     "devDependencies": {
-        "eslint": "^7.32.0",
-        "prettier": "^2.4.1"
+        "eslint": "^8.6.0",
+        "husky": "^7.0.4",
+        "jest": "^27.4.7",
+        "lint-staged": "^12.1.7",
+        "prettier": "^2.5.1"
+    },
+    "engines": {
+        "node": ">=14"
     }
 }

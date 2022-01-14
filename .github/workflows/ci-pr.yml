@@ -1,0 +1,39 @@
+name: CI on PR
+
+on:
+    workflow_dispatch:
+    pull_request:
+        types: [opened, edited, synchronize, reopened]
+
+jobs:
+    format-lint-lwc-tests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: 'Checkout source code'
+              uses: actions/checkout@v2
+
+            - name: 'Restore node_modules cache'
+              id: cache-npm
+              uses: actions/cache@v1
+              with:
+                  path: node_modules
+                  key: npm-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      npm-${{ env.cache-name }}-
+                      npm-
+
+            - name: 'Install npm dependencies'
+              if: steps.cache-npm.outputs.cache-hit != 'true'
+              run: npm ci
+
+            - name: 'Format'
+              run: npm run prettier:verify
+
+            - name: 'Lint'
+              run: npm run lint
+
+            - name: 'Unit test'
+              run: npm run test:coverage
+
+            - name: 'Upload code coverage to Codecov.io'
+              uses: codecov/codecov-action@v2.0.2
