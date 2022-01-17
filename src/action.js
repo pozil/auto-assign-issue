@@ -47,7 +47,10 @@ const runAction = async (
     }
     const [owner, repo] = repository.full_name.split('/');
     // Check params
-    if (!assigneesString?.trim() && !teamsString?.trim()) {
+    if (
+        (!assigneesString || !assigneesString.trim()) &&
+        (!teamsString || !teamsString.trim())
+    ) {
         throw new Error(
             'Missing required paramters: you must provide assignees or teams'
         );
