@@ -5,8 +5,8 @@ const {
 } = require('../action.js');
 
 const TEAMS_MEMBERS = {
-    teamA: [{ login: 'userA1' }, { login: 'userA2' }],
-    teamB: [{ login: 'userB1' }]
+    teamA: { data: [{ login: 'userA1' }, { login: 'userA2' }] },
+    teamB: { data: [{ login: 'userB1' }] }
 };
 const CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
