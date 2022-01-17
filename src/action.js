@@ -24,6 +24,9 @@ const getTeamMembers = async (octokit, org, teamNames) => {
         newErr.stack += `\nCaused by: ${err.stack}`;
         throw newErr;
     });
+
+    console.log(JSON.stringify(teamMemberRequests));
+
     return teamMemberRequests
         .reduce((all, cur) => all.concat(cur), [])
         .map((user) => user.login);
