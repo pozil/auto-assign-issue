@@ -28,6 +28,7 @@ const getTeamMembers = async (octokit, org, teamNames) => {
     console.log(JSON.stringify(teamMemberRequests));
 
     return teamMemberRequests
+        .map((response) => response.data)
         .reduce((all, cur) => all.concat(cur), [])
         .map((user) => user.login);
 };
