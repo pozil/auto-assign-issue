@@ -19,7 +19,11 @@ const getTeamMembers = async (octokit, org, teamNames) => {
                 team_slug: teamName
             })
         )
-    );
+    ).catch((err) => {
+        const newErr = new Error('Failed to retrieve team members');
+        newErr.stack += `\nCaused by: ${err.stack}`;
+        throw newErr;
+    });
     return teamMemberRequests
         .reduce((all, cur) => all.concat(cur), [])
         .map((user) => user.login);
