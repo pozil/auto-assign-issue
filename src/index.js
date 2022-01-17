@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
-const { runAction } = require('action.js');
+const { runAction } = require('./action');
 
 try {
     // Get params
