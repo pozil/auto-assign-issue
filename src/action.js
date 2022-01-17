@@ -64,20 +64,23 @@ const runAction = async (
     }
 
     // Get issue assignees
-    let assignees = assigneesString
-        ?.split(',')
-        .map((assigneeName) => assigneeName.trim());
-    if (!assignees) {
-        assignees = [];
-    }
+    let assignees = [];
 
+    // Get users
+    if (assigneesString) {
+        assignees = assigneesString
+            .split(',')
+            .map((assigneeName) => assigneeName.trim());
+    }
     // Get team members
-    const teamNames = teamsString
-        ?.split(',')
-        .map((teamName) => teamName.trim());
-    if (teamNames) {
-        const teamMembers = await getTeamMembers(octokit, owner, teamNames);
-        assignees = assignees.concat(teamMembers);
+    if (teamsString) {
+        const teamNames = teamsString
+            .split(',')
+            .map((teamName) => teamName.trim());
+        if (teamNames) {
+            const teamMembers = await getTeamMembers(octokit, owner, teamNames);
+            assignees = assignees.concat(teamMembers);
+        }
     }
 
     // Remove duplicates from assignees
