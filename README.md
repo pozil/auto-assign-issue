@@ -10,6 +10,9 @@
 | `teams`         | only if `assignees` is not specified | Comma separated list of teams. Issue will be assigned to the team members.                                         |
 | `numOfAssignee` | false                                | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users. |
 
+**Important Requirement**
+If using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough).
+
 ## Examples
 
 Here's an example flow that auto-assigns all new issues to two users randomly chosen from `octocat`, `cat` and `dog` :
@@ -38,6 +41,7 @@ This other configuration assigns issues to a random member of the `support` team
 - name: 'Auto-assign issue'
     uses: pozil/auto-assign-issue@v1.3.0
     with:
+        repo-token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
         teams: support
         numOfAssignee: 1
 ```
