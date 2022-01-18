@@ -10,9 +10,6 @@
 | `teams`         | only if `assignees` is not specified | Comma separated list of teams. Issue will be assigned to the team members.<br/><br/>**Important Requirement:** if using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough). |
 | `numOfAssignee` | false                                | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users.                                                                                                                                             |
 
-**Important Requirement**
-If using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough).
-
 ## Examples
 
 Here's an example flow that auto-assigns all new issues to two users randomly chosen from `octocat`, `cat` and `dog` :
