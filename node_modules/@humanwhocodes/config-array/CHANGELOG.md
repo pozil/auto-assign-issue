@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.9.3](https://www.github.com/humanwhocodes/config-array/compare/v0.9.2...v0.9.3) (2022-01-26)
+
+
+### Bug Fixes
+
+* Make negated ignore patterns work like gitignore ([4ee8e99](https://www.github.com/humanwhocodes/config-array/commit/4ee8e998436e2c4538b06476e0bead8a44fe5a1b))
+
 ### [0.9.2](https://www.github.com/humanwhocodes/config-array/compare/v0.9.1...v0.9.2) (2021-11-02)
 
 
