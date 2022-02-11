@@ -12,6 +12,10 @@ const CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
     issue: { number: 666 }
 };
+const PR_CONTEXT_PAYLOAD = {
+    repository: { full_name: 'mockOrg/mockRepo' },
+    issue: { number: 666 }
+};
 
 // Mock Octokit
 const assignUsersToIssueMock = jest.fn(() => Promise.resolve());
@@ -170,6 +174,25 @@ describe('action', () => {
             expect(
                 assignUsersToIssueMock.mock.calls[0][0].assignees.length
             ).toBe(2);
+        });
+
+        it('works with pull requests', async () => {
+            await runAction(
+                octokitMock,
+                PR_CONTEXT_PAYLOAD,
+                'user1,user2',
+                null,
+                null
+            );
+
+            expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
+            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+                assignees: ['user1', 'user2'],
+                issue_number: 666,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
         });
     });
 });

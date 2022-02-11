@@ -46,7 +46,10 @@ const runAction = async (
     numOfAssigneeString
 ) => {
     // Get repo and issue info from context
-    const { repository, issue } = context;
+    const { repository } = context;
+
+    const issue = context.issue || context.pull_request;
+
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
