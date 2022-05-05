@@ -1,15 +1,34 @@
 'use strict';
 
-function _emittery() {
-  const data = _interopRequireDefault(require('emittery'));
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports.EmittingTestRunner = exports.CallbackTestRunner = void 0;
 
-  _emittery = function () {
-    return data;
-  };
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+class BaseTestRunner {
+  isSerial;
+  supportsEventEmitters;
 
-  return data;
+  constructor(_globalConfig, _context) {
+    this._globalConfig = _globalConfig;
+    this._context = _context;
+  }
 }
 
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : {default: obj};
+class CallbackTestRunner extends BaseTestRunner {
+  supportsEventEmitters = false;
 }
+
+exports.CallbackTestRunner = CallbackTestRunner;
+
+class EmittingTestRunner extends BaseTestRunner {
+  supportsEventEmitters = true;
+}
+
+exports.EmittingTestRunner = EmittingTestRunner;

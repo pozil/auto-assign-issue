@@ -98,10 +98,10 @@ const formatError = error => {
 const resolvers = new Map();
 
 const getResolver = config => {
-  const resolver = resolvers.get(config.name);
+  const resolver = resolvers.get(config.id);
 
   if (!resolver) {
-    throw new Error('Cannot find resolver for: ' + config.name);
+    throw new Error(`Cannot find resolver for: ${config.id}`);
   }
 
   return resolver;
@@ -118,7 +118,7 @@ function setup(setupData) {
       .getModuleMapFromJSON(serializableModuleMap);
 
     resolvers.set(
-      config.name,
+      config.id,
       _jestRuntime().default.createResolver(config, moduleMap)
     );
   }
@@ -135,7 +135,7 @@ async function worker({config, globalConfig, path, context}) {
       globalConfig,
       config,
       getResolver(config),
-      context && {
+      {
         ...context,
         changedFiles: context.changedFiles && new Set(context.changedFiles),
         sourcesRelatedToTestsInChangedFiles:

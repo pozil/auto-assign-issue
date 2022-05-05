@@ -23,34 +23,18 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
+/* eslint-disable local/ban-types-eventually */
 class UpdateSnapshotInteractivePlugin extends _jestWatcher().BaseWatchPlugin {
-  constructor(...args) {
-    super(...args);
-
-    _defineProperty(
-      this,
-      '_snapshotInteractiveMode',
-      new _SnapshotInteractiveMode.default(this._stdout)
-    );
-
-    _defineProperty(this, '_failedSnapshotTestAssertions', []);
-
-    _defineProperty(this, 'isInternal', true);
-  }
+  _snapshotInteractiveMode = new _SnapshotInteractiveMode.default(this._stdout);
+  _failedSnapshotTestAssertions = [];
+  isInternal = true;
 
   getFailedSnapshotTestAssertions(testResults) {
     const failedTestPaths = [];

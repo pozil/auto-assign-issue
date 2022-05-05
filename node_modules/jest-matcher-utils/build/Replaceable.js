@@ -7,29 +7,20 @@ exports.default = void 0;
 
 var _jestGetType = require('jest-get-type');
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const supportTypes = ['map', 'array', 'object'];
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 class Replaceable {
+  object;
+  type;
+
   constructor(object) {
-    _defineProperty(this, 'object', void 0);
-
-    _defineProperty(this, 'type', void 0);
-
     this.object = object;
     this.type = (0, _jestGetType.getType)(object);
 

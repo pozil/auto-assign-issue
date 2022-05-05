@@ -5,20 +5,6 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.default = void 0;
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
@@ -26,9 +12,7 @@ function _defineProperty(obj, key, value) {
  * LICENSE file in the root directory of this source tree.
  */
 class FailedTestsCache {
-  constructor() {
-    _defineProperty(this, '_enabledTestsMap', void 0);
-  }
+  _enabledTestsMap;
 
   filterTests(tests) {
     const enabledTestsMap = this._enabledTestsMap;

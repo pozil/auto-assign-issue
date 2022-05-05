@@ -32,17 +32,17 @@ const activeFilters = (globalConfig, delimiter = '\n') => {
     const filters = [
       testPathPattern
         ? _chalk().default.dim('filename ') +
-          _chalk().default.yellow('/' + testPathPattern + '/')
+          _chalk().default.yellow(`/${testPathPattern}/`)
         : null,
       testNamePattern
         ? _chalk().default.dim('test name ') +
-          _chalk().default.yellow('/' + testNamePattern + '/')
+          _chalk().default.yellow(`/${testNamePattern}/`)
         : null
     ]
       .filter(f => f)
       .join(', ');
     const messages = [
-      '\n' + _chalk().default.bold('Active Filters: ') + filters
+      `\n${_chalk().default.bold('Active Filters: ')}${filters}`
     ];
     return messages.filter(message => !!message).join(delimiter);
   }

@@ -34,19 +34,41 @@ function _interopRequireDefault(obj) {
  * LICENSE file in the root directory of this source tree.
  */
 function getNoTestsFoundMessage(testRunData, globalConfig) {
+  const exitWith0 =
+    globalConfig.passWithNoTests ||
+    globalConfig.lastCommit ||
+    globalConfig.onlyChanged;
+
   if (globalConfig.onlyFailures) {
-    return (0, _getNoTestFoundFailed.default)(globalConfig);
+    return {
+      exitWith0,
+      message: (0, _getNoTestFoundFailed.default)(globalConfig)
+    };
   }
 
   if (globalConfig.onlyChanged) {
-    return (0, _getNoTestFoundRelatedToChangedFiles.default)(globalConfig);
+    return {
+      exitWith0,
+      message: (0, _getNoTestFoundRelatedToChangedFiles.default)(globalConfig)
+    };
   }
 
   if (globalConfig.passWithNoTests) {
-    return (0, _getNoTestFoundPassWithNoTests.default)();
+    return {
+      exitWith0,
+      message: (0, _getNoTestFoundPassWithNoTests.default)()
+    };
   }
 
-  return testRunData.length === 1 || globalConfig.verbose
-    ? (0, _getNoTestFoundVerbose.default)(testRunData, globalConfig)
-    : (0, _getNoTestFound.default)(testRunData, globalConfig);
+  return {
+    exitWith0,
+    message:
+      testRunData.length === 1 || globalConfig.verbose
+        ? (0, _getNoTestFoundVerbose.default)(
+            testRunData,
+            globalConfig,
+            exitWith0
+          )
+        : (0, _getNoTestFound.default)(testRunData, globalConfig, exitWith0)
+  };
 }

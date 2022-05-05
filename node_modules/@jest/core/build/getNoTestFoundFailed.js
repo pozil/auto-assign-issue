@@ -40,10 +40,11 @@ function getNoTestFoundFailed(globalConfig) {
 
   if (_jestUtil().isInteractive) {
     msg += _chalk().default.dim(
-      '\n' +
-        (globalConfig.watch
+      `\n${
+        globalConfig.watch
           ? 'Press `f` to quit "only failed tests" mode.'
-          : 'Run Jest without `--onlyFailures` or with `--all` to run all tests.')
+          : 'Run Jest without `--onlyFailures` or with `--all` to run all tests.'
+      }`
     );
   }
 

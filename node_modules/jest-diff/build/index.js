@@ -79,21 +79,7 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-var global = (function () {
-  if (typeof globalThis !== 'undefined') {
-    return globalThis;
-  } else if (typeof global !== 'undefined') {
-    return global;
-  } else if (typeof self !== 'undefined') {
-    return self;
-  } else if (typeof window !== 'undefined') {
-    return window;
-  } else {
-    return Function('return this')();
-  }
-})();
-
-var Symbol = global['jest-symbol-do-not-touch'] || global.Symbol;
+var Symbol = globalThis['jest-symbol-do-not-touch'] || globalThis.Symbol;
 
 const getCommonMessage = (message, options) => {
   const {commonColor} = (0, _normalizeDiffOptions.normalizeDiffOptions)(
@@ -229,10 +215,10 @@ function compareObjects(a, b, options) {
     difference = getObjectsDifference(a, b, formatOptions, options);
 
     if (difference !== noDiffMessage && !hasThrown) {
-      difference =
-        getCommonMessage(_constants.SIMILAR_MESSAGE, options) +
-        '\n\n' +
-        difference;
+      difference = `${getCommonMessage(
+        _constants.SIMILAR_MESSAGE,
+        options
+      )}\n\n${difference}`;
     }
   }
 

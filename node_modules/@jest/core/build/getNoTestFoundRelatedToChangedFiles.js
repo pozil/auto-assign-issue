@@ -46,10 +46,11 @@ function getNoTestFoundRelatedToChangedFiles(globalConfig) {
 
   if (_jestUtil().isInteractive) {
     msg += _chalk().default.dim(
-      '\n' +
-        (globalConfig.watch
+      `\n${
+        globalConfig.watch
           ? 'Press `a` to run all tests, or run Jest with `--watchAll`.'
-          : 'Run Jest without `-o` or with `--all` to run all tests.')
+          : 'Run Jest without `-o` or with `--all` to run all tests.'
+      }`
     );
   }
 

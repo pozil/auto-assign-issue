@@ -15,29 +15,15 @@ function _jestWatcher() {
   return data;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
-// TODO: Make underscored props `private`
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 class TestNamePatternPrompt extends _jestWatcher().PatternPrompt {
   constructor(pipe, prompt) {
-    super(pipe, prompt);
-
-    _defineProperty(this, '_cachedTestResults', void 0);
-
-    this._entityName = 'tests';
-    this._cachedTestResults = [];
+    super(pipe, prompt, 'tests');
   }
 
   _onChange(pattern, options) {
@@ -54,32 +40,6 @@ class TestNamePatternPrompt extends _jestWatcher().PatternPrompt {
       this._currentUsageRows,
       pipe
     );
-  }
-
-  _getMatchedTests(pattern) {
-    let regex;
-
-    try {
-      regex = new RegExp(pattern, 'i');
-    } catch {
-      return [];
-    }
-
-    const matchedTests = [];
-
-    this._cachedTestResults.forEach(({testResults}) =>
-      testResults.forEach(({title}) => {
-        if (regex.test(title)) {
-          matchedTests.push(title);
-        }
-      })
-    );
-
-    return matchedTests;
-  }
-
-  updateCachedTestResults(testResults = []) {
-    this._cachedTestResults = testResults;
   }
 }
 

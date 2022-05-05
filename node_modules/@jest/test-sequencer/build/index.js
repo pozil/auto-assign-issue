@@ -5,10 +5,40 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.default = void 0;
 
+function crypto() {
+  const data = _interopRequireWildcard(require('crypto'));
+
+  crypto = function () {
+    return data;
+  };
+
+  return data;
+}
+
+function path() {
+  const data = _interopRequireWildcard(require('path'));
+
+  path = function () {
+    return data;
+  };
+
+  return data;
+}
+
 function fs() {
   const data = _interopRequireWildcard(require('graceful-fs'));
 
   fs = function () {
+    return data;
+  };
+
+  return data;
+}
+
+function _slash() {
+  const data = _interopRequireDefault(require('slash'));
+
+  _slash = function () {
     return data;
   };
 
@@ -71,20 +101,12 @@ function _interopRequireWildcard(obj, nodeInterop) {
   return newObj;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const FAIL = 0;
 const SUCCESS = 1;
 
@@ -102,18 +124,16 @@ const SUCCESS = 1;
  * is called to store/update this information on the cache map.
  */
 class TestSequencer {
-  constructor() {
-    _defineProperty(this, '_cache', new Map());
-  }
+  _cache = new Map();
 
-  _getCachePath(context) {
-    const {config} = context;
+  _getCachePath(testContext) {
+    const {config} = testContext;
 
     const HasteMapClass = _jestHasteMap().default.getStatic(config);
 
     return HasteMapClass.getCacheFilePath(
       config.cacheDirectory,
-      'perf-cache-' + config.name
+      `perf-cache-${config.id}`
     );
   }
 
@@ -144,25 +164,83 @@ class TestSequencer {
     return cache;
   }
   /**
-   * Sorting tests is very important because it has a great impact on the
-   * user-perceived responsiveness and speed of the test run.
+   * Select tests for shard requested via --shard=shardIndex/shardCount
+   * Sharding is applied before sorting
    *
-   * If such information is on cache, tests are sorted based on:
-   * -> Has it failed during the last run ?
-   * Since it's important to provide the most expected feedback as quickly
-   * as possible.
-   * -> How long it took to run ?
-   * Because running long tests first is an effort to minimize worker idle
-   * time at the end of a long test run.
-   * And if that information is not available they are sorted based on file size
-   * since big test files usually take longer to complete.
+   * @param tests All tests
+   * @param options shardIndex and shardIndex to select
    *
-   * Note that a possible improvement would be to analyse other information
-   * from the file other than its size.
+   * @example
+   * ```typescript
+   * class CustomSequencer extends Sequencer {
+   *  shard(tests, { shardIndex, shardCount }) {
+   *    const shardSize = Math.ceil(tests.length / options.shardCount);
+   *    const shardStart = shardSize * (options.shardIndex - 1);
+   *    const shardEnd = shardSize * options.shardIndex;
+   *    return [...tests]
+   *     .sort((a, b) => (a.path > b.path ? 1 : -1))
+   *     .slice(shardStart, shardEnd);
+   *  }
+   * }
+   * ```
+   */
+
+  shard(tests, options) {
+    const shardSize = Math.ceil(tests.length / options.shardCount);
+    const shardStart = shardSize * (options.shardIndex - 1);
+    const shardEnd = shardSize * options.shardIndex;
+    return tests
+      .map(test => {
+        const relativeTestPath = path().posix.relative(
+          (0, _slash().default)(test.context.config.rootDir),
+          (0, _slash().default)(test.path)
+        );
+        return {
+          hash: crypto()
+            .createHash('sha1')
+            .update(relativeTestPath)
+            .digest('hex'),
+          test
+        };
+      })
+      .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
+      .slice(shardStart, shardEnd)
+      .map(result => result.test);
+  }
+  /**
+   * Sort test to determine order of execution
+   * Sorting is applied after sharding
+   * @param tests
    *
+   * ```typescript
+   * class CustomSequencer extends Sequencer {
+   *   sort(tests) {
+   *     const copyTests = Array.from(tests);
+   *     return [...tests].sort((a, b) => (a.path > b.path ? 1 : -1));
+   *   }
+   * }
+   * ```
    */
 
   sort(tests) {
+    /**
+     * Sorting tests is very important because it has a great impact on the
+     * user-perceived responsiveness and speed of the test run.
+     *
+     * If such information is on cache, tests are sorted based on:
+     * -> Has it failed during the last run ?
+     * Since it's important to provide the most expected feedback as quickly
+     * as possible.
+     * -> How long it took to run ?
+     * Because running long tests first is an effort to minimize worker idle
+     * time at the end of a long test run.
+     * And if that information is not available they are sorted based on file size
+     * since big test files usually take longer to complete.
+     *
+     * Note that a possible improvement would be to analyse other information
+     * from the file other than its size.
+     *
+     */
     const stats = {};
 
     const fileSize = ({path, context: {hasteFS}}) =>

@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [21.0.1](https://github.com/yargs/yargs-parser/compare/yargs-parser-v21.0.0...yargs-parser-v21.0.1) (2022-02-27)
+
+
+### Bug Fixes
+
+* return deno env object ([#432](https://github.com/yargs/yargs-parser/issues/432)) ([b00eb87](https://github.com/yargs/yargs-parser/commit/b00eb87b4860a890dd2dab0d6058241bbfd2b3ec))
+
+## [21.0.0](https://www.github.com/yargs/yargs-parser/compare/yargs-parser-v20.2.9...yargs-parser-v21.0.0) (2021-11-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* drops support for 10 (#421)
+
+### Bug Fixes
+
+* esm json import ([#416](https://www.github.com/yargs/yargs-parser/issues/416)) ([90f970a](https://www.github.com/yargs/yargs-parser/commit/90f970a6482dd4f5b5eb18d38596dd6f02d73edf))
+* parser should preserve inner quotes ([#407](https://www.github.com/yargs/yargs-parser/issues/407)) ([ae11f49](https://www.github.com/yargs/yargs-parser/commit/ae11f496a8318ea8885aa25015d429b33713c314))
+
+
+### Code Refactoring
+
+* drops support for 10 ([#421](https://www.github.com/yargs/yargs-parser/issues/421)) ([3aaf878](https://www.github.com/yargs/yargs-parser/commit/3aaf8784f5c7f2aec6108c1c6a55537fa7e3b5c1))
+
 ### [20.2.9](https://www.github.com/yargs/yargs-parser/compare/yargs-parser-v20.2.8...yargs-parser-v20.2.9) (2021-06-20)
 
 

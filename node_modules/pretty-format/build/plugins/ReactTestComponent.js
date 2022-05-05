@@ -7,21 +7,7 @@ exports.test = exports.serialize = exports.default = void 0;
 
 var _markup = require('./lib/markup');
 
-var global = (function () {
-  if (typeof globalThis !== 'undefined') {
-    return globalThis;
-  } else if (typeof global !== 'undefined') {
-    return global;
-  } else if (typeof self !== 'undefined') {
-    return self;
-  } else if (typeof window !== 'undefined') {
-    return window;
-  } else {
-    return Function('return this')();
-  }
-})();
-
-var Symbol = global['jest-symbol-do-not-touch'] || global.Symbol;
+var Symbol = globalThis['jest-symbol-do-not-touch'] || globalThis.Symbol;
 const testSymbol =
   typeof Symbol === 'function' && Symbol.for
     ? Symbol.for('react.test.json')

@@ -29,23 +29,44 @@ function _interopRequireDefault(obj) {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-function getSelectProjectsMessage(projectConfigs) {
+function getSelectProjectsMessage(projectConfigs, opts) {
   if (projectConfigs.length === 0) {
-    return getNoSelectionWarning();
+    return getNoSelectionWarning(opts);
   }
 
   return getProjectsRunningMessage(projectConfigs);
 }
 
-function getNoSelectionWarning() {
-  return _chalk().default.yellow(
-    'You provided values for --selectProjects but no projects were found matching the selection.\n'
-  );
+function getNoSelectionWarning(opts) {
+  if (opts.ignoreProjects && opts.selectProjects) {
+    return _chalk().default.yellow(
+      'You provided values for --selectProjects and --ignoreProjects, but no projects were found matching the selection.\n' +
+        'Are you ignoring all the selected projects?\n'
+    );
+  } else if (opts.ignoreProjects) {
+    return _chalk().default.yellow(
+      'You provided values for --ignoreProjects, but no projects were found matching the selection.\n' +
+        'Are you ignoring all projects?\n'
+    );
+  } else if (opts.selectProjects) {
+    return _chalk().default.yellow(
+      'You provided values for --selectProjects but no projects were found matching the selection.\n'
+    );
+  } else {
+    return _chalk().default.yellow('No projects were found.\n');
+  }
 }
 
 function getProjectsRunningMessage(projectConfigs) {
   if (projectConfigs.length === 1) {
-    const name = (0, _getProjectDisplayName.default)(projectConfigs[0]);
+    var _getProjectDisplayNam;
+
+    const name =
+      (_getProjectDisplayNam = (0, _getProjectDisplayName.default)(
+        projectConfigs[0]
+      )) !== null && _getProjectDisplayNam !== void 0
+        ? _getProjectDisplayNam
+        : '<unnamed project>';
     return `Running one project: ${_chalk().default.bold(name)}\n`;
   }
 

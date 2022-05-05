@@ -10,20 +10,6 @@ exports.cleanupSemantic =
   exports.DIFF_DELETE =
     void 0;
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
 /**
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
@@ -79,11 +65,10 @@ var DIFF_EQUAL = 0;
 exports.DIFF_EQUAL = DIFF_EQUAL;
 
 class Diff {
+  0;
+  1;
+
   constructor(op, text) {
-    _defineProperty(this, 0, void 0);
-
-    _defineProperty(this, 1, void 0);
-
     this[0] = op;
     this[1] = text;
   }

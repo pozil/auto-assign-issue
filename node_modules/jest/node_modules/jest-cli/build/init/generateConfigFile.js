@@ -28,15 +28,10 @@ const stringifyOption = (option, map, linePrefix = '') => {
     null,
     2
   )}`;
-  return (
-    optionDescription +
-    '\n' +
-    stringifiedObject
-      .split('\n')
-      .map(line => '  ' + linePrefix + line)
-      .join('\n') +
-    ',\n'
-  );
+  return `${optionDescription}\n${stringifiedObject
+    .split('\n')
+    .map(line => `  ${linePrefix}${line}`)
+    .join('\n')},\n`;
 };
 
 const generateConfigFile = (results, generateEsm = false) => {
@@ -90,14 +85,13 @@ const generateConfigFile = (results, generateEsm = false) => {
  */
 
 `;
-  return (
+  return `${
     configHeaderMessage +
     (useTypescript || generateEsm
       ? 'export default {\n'
       : 'module.exports = {\n') +
-    properties.join('\n') +
-    '};\n'
-  );
+    properties.join('\n')
+  }};\n`;
 };
 
 var _default = generateConfigFile;

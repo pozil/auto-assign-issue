@@ -19,5 +19,5 @@ function logDebugMessages(globalConfig, configs, outputStream) {
     globalConfig,
     version: VERSION
   };
-  outputStream.write(JSON.stringify(output, null, '  ') + '\n');
+  outputStream.write(`${JSON.stringify(output, null, '  ')}\n`);
 }

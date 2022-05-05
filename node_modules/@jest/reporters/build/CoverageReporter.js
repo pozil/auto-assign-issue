@@ -175,44 +175,32 @@ function _interopRequireWildcard(obj, nodeInterop) {
   return newObj;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const FAIL_COLOR = _chalk().default.bold.red;
 
 const RUNNING_TEST_COLOR = _chalk().default.bold.dim;
 
 class CoverageReporter extends _BaseReporter.default {
-  constructor(globalConfig, options) {
+  _context;
+  _coverageMap;
+  _globalConfig;
+  _sourceMapStore;
+  _v8CoverageResults;
+  static filename = __filename;
+
+  constructor(globalConfig, context) {
     super();
-
-    _defineProperty(this, '_coverageMap', void 0);
-
-    _defineProperty(this, '_globalConfig', void 0);
-
-    _defineProperty(this, '_sourceMapStore', void 0);
-
-    _defineProperty(this, '_options', void 0);
-
-    _defineProperty(this, '_v8CoverageResults', void 0);
-
+    this._context = context;
     this._coverageMap = _istanbulLibCoverage().default.createCoverageMap({});
     this._globalConfig = globalConfig;
     this._sourceMapStore =
       _istanbulLibSourceMaps().default.createSourceMapStore();
     this._v8CoverageResults = [];
-    this._options = options || {};
   }
 
   onTestResult(_test, testResult) {
@@ -227,8 +215,8 @@ class CoverageReporter extends _BaseReporter.default {
     }
   }
 
-  async onRunComplete(contexts, aggregatedResults) {
-    await this._addUntestedFiles(contexts);
+  async onRunComplete(testContexts, aggregatedResults) {
+    await this._addUntestedFiles(testContexts);
     const {map, reportContext} = await this._getCoverageResult();
 
     try {
@@ -266,9 +254,9 @@ class CoverageReporter extends _BaseReporter.default {
     this._checkThreshold(map);
   }
 
-  async _addUntestedFiles(contexts) {
+  async _addUntestedFiles(testContexts) {
     const files = [];
-    contexts.forEach(context => {
+    testContexts.forEach(context => {
       const config = context.config;
 
       if (
@@ -306,6 +294,10 @@ class CoverageReporter extends _BaseReporter.default {
     } else {
       worker = new (_jestWorker().Worker)(require.resolve('./CoverageWorker'), {
         exposedMethods: ['worker'],
+        // @ts-expect-error: option does not exist on the node 12 types
+        forkOptions: {
+          serialization: 'json'
+        },
         maxRetries: 2,
         numWorkers: this._globalConfig.maxWorkers
       });
@@ -327,16 +319,15 @@ class CoverageReporter extends _BaseReporter.default {
         try {
           const result = await worker.worker({
             config,
-            globalConfig: this._globalConfig,
-            options: {
-              ...this._options,
+            context: {
               changedFiles:
-                this._options.changedFiles &&
-                Array.from(this._options.changedFiles),
+                this._context.changedFiles &&
+                Array.from(this._context.changedFiles),
               sourcesRelatedToTestsInChangedFiles:
-                this._options.sourcesRelatedToTestsInChangedFiles &&
-                Array.from(this._options.sourcesRelatedToTestsInChangedFiles)
+                this._context.sourcesRelatedToTestsInChangedFiles &&
+                Array.from(this._context.sourcesRelatedToTestsInChangedFiles)
             },
+            globalConfig: this._globalConfig,
             path: filename
           });
 
@@ -426,7 +417,17 @@ class CoverageReporter extends _BaseReporter.default {
         (files, file) => {
           const pathOrGlobMatches = thresholdGroups.reduce(
             (agg, thresholdGroup) => {
-              const absoluteThresholdGroup = path().resolve(thresholdGroup); // The threshold group might be a path:
+              // Preserve trailing slash, but not required if root dir
+              // See https://github.com/facebook/jest/issues/12703
+              const resolvedThresholdGroup = path().resolve(thresholdGroup);
+              const suffix =
+                (thresholdGroup.endsWith(path().sep) ||
+                  (process.platform === 'win32' &&
+                    thresholdGroup.endsWith('/'))) &&
+                !resolvedThresholdGroup.endsWith(path().sep)
+                  ? path().sep
+                  : '';
+              const absoluteThresholdGroup = `${resolvedThresholdGroup}${suffix}`; // The threshold group might be a path:
 
               if (file.indexOf(absoluteThresholdGroup) === 0) {
                 groupTypeByThresholdGroup[thresholdGroup] =
@@ -626,7 +627,6 @@ class CoverageReporter extends _BaseReporter.default {
           await converter.load();
           converter.applyCoverage(res.functions);
           const istanbulData = converter.toIstanbul();
-          converter.destroy();
           return istanbulData;
         })
       );
@@ -664,5 +664,3 @@ class CoverageReporter extends _BaseReporter.default {
 }
 
 exports.default = CoverageReporter;
-
-_defineProperty(CoverageReporter, 'filename', __filename);

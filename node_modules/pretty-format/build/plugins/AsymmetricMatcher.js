@@ -7,21 +7,7 @@ exports.test = exports.serialize = exports.default = void 0;
 
 var _collections = require('../collections');
 
-var global = (function () {
-  if (typeof globalThis !== 'undefined') {
-    return globalThis;
-  } else if (typeof global !== 'undefined') {
-    return global;
-  } else if (typeof self !== 'undefined') {
-    return self;
-  } else if (typeof window !== 'undefined') {
-    return window;
-  } else {
-    return Function('return this')();
-  }
-})();
-
-var Symbol = global['jest-symbol-do-not-touch'] || global.Symbol;
+var Symbol = globalThis['jest-symbol-do-not-touch'] || globalThis.Symbol;
 const asymmetricMatcher =
   typeof Symbol === 'function' && Symbol.for
     ? Symbol.for('jest.asymmetricMatcher')
@@ -36,23 +22,17 @@ const serialize = (val, config, indentation, depth, refs, printer) => {
     stringedValue === 'ArrayNotContaining'
   ) {
     if (++depth > config.maxDepth) {
-      return '[' + stringedValue + ']';
+      return `[${stringedValue}]`;
     }
 
-    return (
-      stringedValue +
-      SPACE +
-      '[' +
-      (0, _collections.printListItems)(
-        val.sample,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer
-      ) +
-      ']'
-    );
+    return `${stringedValue + SPACE}[${(0, _collections.printListItems)(
+      val.sample,
+      config,
+      indentation,
+      depth,
+      refs,
+      printer
+    )}]`;
   }
 
   if (
@@ -60,23 +40,17 @@ const serialize = (val, config, indentation, depth, refs, printer) => {
     stringedValue === 'ObjectNotContaining'
   ) {
     if (++depth > config.maxDepth) {
-      return '[' + stringedValue + ']';
+      return `[${stringedValue}]`;
     }
 
-    return (
-      stringedValue +
-      SPACE +
-      '{' +
-      (0, _collections.printObjectProperties)(
-        val.sample,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer
-      ) +
-      '}'
-    );
+    return `${stringedValue + SPACE}{${(0, _collections.printObjectProperties)(
+      val.sample,
+      config,
+      indentation,
+      depth,
+      refs,
+      printer
+    )}}`;
   }
 
   if (
@@ -98,6 +72,12 @@ const serialize = (val, config, indentation, depth, refs, printer) => {
       stringedValue +
       SPACE +
       printer(val.sample, config, indentation, depth, refs)
+    );
+  }
+
+  if (typeof val.toAsymmetricMatcher !== 'function') {
+    throw new Error(
+      `Asymmetric matcher ${val.constructor.name} does not implement toAsymmetricMatcher()`
     );
   }
 

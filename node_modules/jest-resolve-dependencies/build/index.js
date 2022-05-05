@@ -67,32 +67,23 @@ function _interopRequireWildcard(obj, nodeInterop) {
   return newObj;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 /**
  * DependencyResolver is used to resolve the direct dependencies of a module or
  * to retrieve a list of all transitive inverse dependencies.
  */
 class DependencyResolver {
+  _hasteFS;
+  _resolver;
+  _snapshotResolver;
+
   constructor(resolver, hasteFS, snapshotResolver) {
-    _defineProperty(this, '_hasteFS', void 0);
-
-    _defineProperty(this, '_resolver', void 0);
-
-    _defineProperty(this, '_snapshotResolver', void 0);
-
     this._resolver = resolver;
     this._hasteFS = hasteFS;
     this._snapshotResolver = snapshotResolver;

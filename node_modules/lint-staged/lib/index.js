@@ -1,12 +1,40 @@
 import debug from 'debug'
 
-import { PREVENTED_EMPTY_COMMIT, GIT_ERROR, RESTORE_STASH_EXAMPLE } from './messages.js'
+import {
+  PREVENTED_EMPTY_COMMIT,
+  GIT_ERROR,
+  RESTORE_STASH_EXAMPLE,
+  NO_CONFIGURATION,
+} from './messages.js'
 import { printTaskOutput } from './printTaskOutput.js'
 import { runAll } from './runAll.js'
-import { ApplyEmptyCommitError, GetBackupStashError, GitError } from './symbols.js'
+import {
+  ApplyEmptyCommitError,
+  ConfigNotFoundError,
+  GetBackupStashError,
+  GitError,
+} from './symbols.js'
 import { validateOptions } from './validateOptions.js'
 
 const debugLog = debug('lint-staged')
+
+/**
+ * Get the maximum length of a command-line argument string based on current platform
+ *
+ * https://serverfault.com/questions/69430/what-is-the-maximum-length-of-a-command-line-in-mac-os-x
+ * https://support.microsoft.com/en-us/help/830473/command-prompt-cmd-exe-command-line-string-limitation
+ * https://unix.stackexchange.com/a/120652
+ */
+const getMaxArgLength = () => {
+  switch (process.platform) {
+    case 'darwin':
+      return 262144
+    case 'win32':
+      return 8191
+    default:
+      return 131072
+  }
+}
 
 /**
  * @typedef {(...any) => void} LogFunction
@@ -39,7 +67,7 @@ const lintStaged = async (
     configPath,
     cwd,
     debug = false,
-    maxArgLength,
+    maxArgLength = getMaxArgLength() / 2,
     quiet = false,
     relative = false,
     shell = false,
@@ -78,7 +106,10 @@ const lintStaged = async (
   } catch (runAllError) {
     if (runAllError && runAllError.ctx && runAllError.ctx.errors) {
       const { ctx } = runAllError
-      if (ctx.errors.has(ApplyEmptyCommitError)) {
+
+      if (ctx.errors.has(ConfigNotFoundError)) {
+        logger.error(NO_CONFIGURATION)
+      } else if (ctx.errors.has(ApplyEmptyCommitError)) {
         logger.warn(PREVENTED_EMPTY_COMMIT)
       } else if (ctx.errors.has(GitError) && !ctx.errors.has(GetBackupStashError)) {
         logger.error(GIT_ERROR)

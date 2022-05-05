@@ -5,32 +5,16 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.default = void 0;
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-/* eslint-disable local/ban-types-eventually */
 class ReporterDispatcher {
-  constructor() {
-    _defineProperty(this, '_reporters', void 0);
+  _reporters;
 
+  constructor() {
     this._reporters = [];
   }
 
@@ -38,9 +22,9 @@ class ReporterDispatcher {
     this._reporters.push(reporter);
   }
 
-  unregister(ReporterClass) {
+  unregister(reporterConstructor) {
     this._reporters = this._reporters.filter(
-      reporter => !(reporter instanceof ReporterClass)
+      reporter => !(reporter instanceof reporterConstructor)
     );
   }
 
@@ -81,10 +65,10 @@ class ReporterDispatcher {
     }
   }
 
-  async onRunComplete(contexts, results) {
+  async onRunComplete(testContexts, results) {
     for (const reporter of this._reporters) {
       if (reporter.onRunComplete) {
-        await reporter.onRunComplete(contexts, results);
+        await reporter.onRunComplete(testContexts, results);
       }
     }
   } // Return a list of last errors for every reporter

@@ -27,7 +27,7 @@ function _interopRequireDefault(obj) {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-function getNoTestFound(testRunData, globalConfig) {
+function getNoTestFound(testRunData, globalConfig, willExitWith0) {
   const testFiles = testRunData.reduce(
     (current, testRun) => current + (testRun.matches.total || 0),
     0
@@ -44,9 +44,23 @@ function getNoTestFound(testRunData, globalConfig) {
     )} - 0 matches`;
   }
 
+  if (willExitWith0) {
+    return (
+      `${_chalk().default.bold('No tests found, exiting with code 0')}\n` +
+      `In ${_chalk().default.bold(globalConfig.rootDir)}` +
+      '\n' +
+      `  ${(0, _pluralize.default)('file', testFiles, 's')} checked across ${(0,
+      _pluralize.default)(
+        'project',
+        testRunData.length,
+        's'
+      )}. Run with \`--verbose\` for more details.` +
+      `\n${dataMessage}`
+    );
+  }
+
   return (
-    _chalk().default.bold('No tests found, exiting with code 1') +
-    '\n' +
+    `${_chalk().default.bold('No tests found, exiting with code 1')}\n` +
     'Run with `--passWithNoTests` to exit with code 0' +
     '\n' +
     `In ${_chalk().default.bold(globalConfig.rootDir)}` +
@@ -57,7 +71,6 @@ function getNoTestFound(testRunData, globalConfig) {
       testRunData.length,
       's'
     )}. Run with \`--verbose\` for more details.` +
-    '\n' +
-    dataMessage
+    `\n${dataMessage}`
   );
 }

@@ -87,17 +87,14 @@ process.on('uncaughtException', err => {
   (0, _exit().default)(1);
 });
 
-function worker({config, globalConfig, path, options}) {
+function worker({config, globalConfig, path, context}) {
   return (0, _generateEmptyCoverage.default)(
     fs().readFileSync(path, 'utf8'),
     path,
     globalConfig,
     config,
-    (options === null || options === void 0 ? void 0 : options.changedFiles) &&
-      new Set(options.changedFiles),
-    (options === null || options === void 0
-      ? void 0
-      : options.sourcesRelatedToTestsInChangedFiles) &&
-      new Set(options.sourcesRelatedToTestsInChangedFiles)
+    context.changedFiles && new Set(context.changedFiles),
+    context.sourcesRelatedToTestsInChangedFiles &&
+      new Set(context.sourcesRelatedToTestsInChangedFiles)
   );
 }

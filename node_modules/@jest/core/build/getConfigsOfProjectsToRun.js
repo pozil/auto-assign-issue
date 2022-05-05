@@ -19,10 +19,29 @@ function _interopRequireDefault(obj) {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-function getConfigsOfProjectsToRun(namesOfProjectsToRun, projectConfigs) {
-  const setOfProjectsToRun = new Set(namesOfProjectsToRun);
+function getConfigsOfProjectsToRun(projectConfigs, opts) {
+  const projectFilter = createProjectFilter(opts);
   return projectConfigs.filter(config => {
     const name = (0, _getProjectDisplayName.default)(config);
-    return name && setOfProjectsToRun.has(name);
+    return projectFilter(name);
   });
+}
+
+function createProjectFilter(opts) {
+  const {selectProjects, ignoreProjects} = opts;
+
+  const always = () => true;
+
+  const selected = selectProjects
+    ? name => name && selectProjects.includes(name)
+    : always;
+  const notIgnore = ignoreProjects
+    ? name => !(name && ignoreProjects.includes(name))
+    : always;
+
+  function test(name) {
+    return selected(name) && notIgnore(name);
+  }
+
+  return test;
 }

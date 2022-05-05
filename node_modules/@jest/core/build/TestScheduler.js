@@ -15,6 +15,16 @@ function _chalk() {
   return data;
 }
 
+function _ciInfo() {
+  const data = require('ci-info');
+
+  _ciInfo = function () {
+    return data;
+  };
+
+  return data;
+}
+
 function _exit() {
   const data = _interopRequireDefault(require('exit'));
 
@@ -66,7 +76,7 @@ function _jestMessageUtil() {
 }
 
 function _jestSnapshot() {
-  const data = _interopRequireDefault(require('jest-snapshot'));
+  const data = require('jest-snapshot');
 
   _jestSnapshot = function () {
     return data;
@@ -95,48 +105,35 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
-async function createTestScheduler(globalConfig, options, context) {
-  const scheduler = new TestScheduler(globalConfig, options, context);
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+async function createTestScheduler(globalConfig, context) {
+  const scheduler = new TestScheduler(globalConfig, context);
   await scheduler._setupReporters();
   return scheduler;
 }
 
 class TestScheduler {
-  constructor(globalConfig, options, context) {
-    _defineProperty(this, '_dispatcher', void 0);
+  _context;
+  _dispatcher;
+  _globalConfig;
 
-    _defineProperty(this, '_globalConfig', void 0);
-
-    _defineProperty(this, '_options', void 0);
-
-    _defineProperty(this, '_context', void 0);
-
+  constructor(globalConfig, context) {
+    this._context = context;
     this._dispatcher = new _ReporterDispatcher.default();
     this._globalConfig = globalConfig;
-    this._options = options;
-    this._context = context;
   }
 
   addReporter(reporter) {
     this._dispatcher.register(reporter);
   }
 
-  removeReporter(ReporterClass) {
-    this._dispatcher.unregister(ReporterClass);
+  removeReporter(reporterConstructor) {
+    this._dispatcher.unregister(reporterConstructor);
   }
 
   async scheduleTests(tests, watcher) {
@@ -145,9 +142,9 @@ class TestScheduler {
     );
 
     const timings = [];
-    const contexts = new Set();
+    const testContexts = new Set();
     tests.forEach(test => {
-      contexts.add(test.context);
+      testContexts.add(test.context);
 
       if (test.duration) {
         timings.push(test.duration);
@@ -178,8 +175,9 @@ class TestScheduler {
 
       if (testResult.leaks) {
         const message =
-          _chalk().default.red.bold('EXPERIMENTAL FEATURE!\n') +
-          'Your test suite is leaking memory. Please ensure all references are cleaned.\n' +
+          `${_chalk().default.red.bold(
+            'EXPERIMENTAL FEATURE!\n'
+          )}Your test suite is leaking memory. Please ensure all references are cleaned.\n` +
           '\n' +
           'There is a number of things that can leak memory:\n' +
           '  - Async operations that have not finished (e.g. fs.readFile).\n' +
@@ -197,7 +195,7 @@ class TestScheduler {
         testResult,
         aggregatedResults
       );
-      return this._bailIfNeeded(contexts, aggregatedResults, watcher);
+      return this._bailIfNeeded(testContexts, aggregatedResults, watcher);
     };
 
     const onFailure = async (test, error) => {
@@ -225,19 +223,18 @@ class TestScheduler {
 
     const updateSnapshotState = async () => {
       const contextsWithSnapshotResolvers = await Promise.all(
-        Array.from(contexts).map(async context => [
+        Array.from(testContexts).map(async context => [
           context,
-          await _jestSnapshot().default.buildSnapshotResolver(context.config)
+          await (0, _jestSnapshot().buildSnapshotResolver)(context.config)
         ])
       );
       contextsWithSnapshotResolvers.forEach(([context, snapshotResolver]) => {
-        const status = _jestSnapshot().default.cleanup(
+        const status = (0, _jestSnapshot().cleanup)(
           context.hasteFS,
           this._globalConfig.updateSnapshot,
           snapshotResolver,
           context.config.testPathIgnorePatterns
         );
-
         aggregatedResults.snapshot.filesRemoved += status.filesRemoved;
         aggregatedResults.snapshot.filesRemovedList = (
           aggregatedResults.snapshot.filesRemovedList || []
@@ -260,12 +257,10 @@ class TestScheduler {
     const testRunners = Object.create(null);
     const contextsByTestRunner = new WeakMap();
     await Promise.all(
-      Array.from(contexts).map(async context => {
+      Array.from(testContexts).map(async context => {
         const {config} = context;
 
         if (!testRunners[config.runner]) {
-          var _this$_context, _this$_context2;
-
           const transformer = await (0, _transform().createScriptTransformer)(
             config
           );
@@ -273,16 +268,9 @@ class TestScheduler {
             config.runner
           );
           const runner = new Runner(this._globalConfig, {
-            changedFiles:
-              (_this$_context = this._context) === null ||
-              _this$_context === void 0
-                ? void 0
-                : _this$_context.changedFiles,
+            changedFiles: this._context.changedFiles,
             sourcesRelatedToTestsInChangedFiles:
-              (_this$_context2 = this._context) === null ||
-              _this$_context2 === void 0
-                ? void 0
-                : _this$_context2.sourcesRelatedToTestsInChangedFiles
+              this._context.sourcesRelatedToTestsInChangedFiles
           });
           testRunners[config.runner] = runner;
           contextsByTestRunner.set(runner, context);
@@ -302,12 +290,8 @@ class TestScheduler {
           const testRunnerOptions = {
             serial: runInBand || Boolean(testRunner.isSerial)
           };
-          /**
-           * Test runners with event emitters are still not supported
-           * for third party test runners.
-           */
 
-          if (testRunner.__PRIVATE_UNSTABLE_API_supportsEventEmitters__) {
+          if (testRunner.supportsEventEmitters) {
             const unsubscribes = [
               testRunner.on('test-file-start', ([test]) =>
                 onTestFileStart(test)
@@ -330,14 +314,7 @@ class TestScheduler {
                 }
               )
             ];
-            await testRunner.runTests(
-              tests,
-              watcher,
-              undefined,
-              undefined,
-              undefined,
-              testRunnerOptions
-            );
+            await testRunner.runTests(tests, watcher, testRunnerOptions);
             unsubscribes.forEach(sub => sub());
           } else {
             await testRunner.runTests(
@@ -359,7 +336,7 @@ class TestScheduler {
 
     await updateSnapshotState();
     aggregatedResults.wasInterrupted = watcher.isInterrupted();
-    await this._dispatcher.onRunComplete(contexts, aggregatedResults);
+    await this._dispatcher.onRunComplete(testContexts, aggregatedResults);
     const anyTestFailures = !(
       aggregatedResults.numFailedTests === 0 &&
       aggregatedResults.numRuntimeErrorTestSuites === 0
@@ -397,132 +374,70 @@ class TestScheduler {
     }
   }
 
-  _shouldAddDefaultReporters(reporters) {
-    return (
-      !reporters ||
-      !!reporters.find(
-        reporter => this._getReporterProps(reporter).path === 'default'
-      )
-    );
-  }
-
   async _setupReporters() {
-    const {collectCoverage, notify, reporters} = this._globalConfig;
+    const {collectCoverage: coverage, notify, verbose} = this._globalConfig;
+    const reporters = this._globalConfig.reporters || [['default', {}]];
+    let summary = false;
 
-    const isDefault = this._shouldAddDefaultReporters(reporters);
+    for (const [reporter, options] of reporters) {
+      switch (reporter) {
+        case 'default':
+          summary = true;
+          verbose
+            ? this.addReporter(
+                new (_reporters().VerboseReporter)(this._globalConfig)
+              )
+            : this.addReporter(
+                new (_reporters().DefaultReporter)(this._globalConfig)
+              );
+          break;
 
-    if (isDefault) {
-      this._setupDefaultReporters(collectCoverage);
-    }
+        case 'github-actions':
+          _ciInfo().GITHUB_ACTIONS &&
+            this.addReporter(new (_reporters().GitHubActionsReporter)());
+          break;
 
-    if (!isDefault && collectCoverage) {
-      var _this$_context3, _this$_context4;
+        case 'summary':
+          summary = true;
+          break;
 
-      this.addReporter(
-        new (_reporters().CoverageReporter)(this._globalConfig, {
-          changedFiles:
-            (_this$_context3 = this._context) === null ||
-            _this$_context3 === void 0
-              ? void 0
-              : _this$_context3.changedFiles,
-          sourcesRelatedToTestsInChangedFiles:
-            (_this$_context4 = this._context) === null ||
-            _this$_context4 === void 0
-              ? void 0
-              : _this$_context4.sourcesRelatedToTestsInChangedFiles
-        })
-      );
+        default:
+          await this._addCustomReporter(reporter, options);
+      }
     }
 
     if (notify) {
       this.addReporter(
-        new (_reporters().NotifyReporter)(
-          this._globalConfig,
-          this._options.startRun,
-          this._context
-        )
+        new (_reporters().NotifyReporter)(this._globalConfig, this._context)
       );
     }
 
-    if (reporters && Array.isArray(reporters)) {
-      await this._addCustomReporters(reporters);
-    }
-  }
-
-  _setupDefaultReporters(collectCoverage) {
-    this.addReporter(
-      this._globalConfig.verbose
-        ? new (_reporters().VerboseReporter)(this._globalConfig)
-        : new (_reporters().DefaultReporter)(this._globalConfig)
-    );
-
-    if (collectCoverage) {
-      var _this$_context5, _this$_context6;
-
+    if (coverage) {
       this.addReporter(
-        new (_reporters().CoverageReporter)(this._globalConfig, {
-          changedFiles:
-            (_this$_context5 = this._context) === null ||
-            _this$_context5 === void 0
-              ? void 0
-              : _this$_context5.changedFiles,
-          sourcesRelatedToTestsInChangedFiles:
-            (_this$_context6 = this._context) === null ||
-            _this$_context6 === void 0
-              ? void 0
-              : _this$_context6.sourcesRelatedToTestsInChangedFiles
-        })
+        new (_reporters().CoverageReporter)(this._globalConfig, this._context)
       );
     }
 
-    this.addReporter(new (_reporters().SummaryReporter)(this._globalConfig));
-  }
-
-  async _addCustomReporters(reporters) {
-    for (const reporter of reporters) {
-      const {options, path} = this._getReporterProps(reporter);
-
-      if (path === 'default') continue;
-
-      try {
-        const Reporter = await (0, _jestUtil().requireOrImportModule)(
-          path,
-          true
-        );
-        this.addReporter(new Reporter(this._globalConfig, options));
-      } catch (error) {
-        error.message =
-          'An error occurred while adding the reporter at path "' +
-          _chalk().default.bold(path) +
-          '".' +
-          error.message;
-        throw error;
-      }
+    if (summary) {
+      this.addReporter(new (_reporters().SummaryReporter)(this._globalConfig));
     }
   }
-  /**
-   * Get properties of a reporter in an object
-   * to make dealing with them less painful.
-   */
 
-  _getReporterProps(reporter) {
-    if (typeof reporter === 'string') {
-      return {
-        options: this._options,
-        path: reporter
-      };
-    } else if (Array.isArray(reporter)) {
-      const [path, options] = reporter;
-      return {
-        options,
-        path
-      };
+  async _addCustomReporter(reporter, options) {
+    try {
+      const Reporter = await (0, _jestUtil().requireOrImportModule)(reporter);
+      this.addReporter(
+        new Reporter(this._globalConfig, options, this._context)
+      );
+    } catch (error) {
+      error.message = `An error occurred while adding the reporter at path "${_chalk().default.bold(
+        reporter
+      )}".\n${error instanceof Error ? error.message : ''}`;
+      throw error;
     }
-
-    throw new Error('Reporter should be either a string or an array');
   }
 
-  async _bailIfNeeded(contexts, aggregatedResults, watcher) {
+  async _bailIfNeeded(testContexts, aggregatedResults, watcher) {
     if (
       this._globalConfig.bail !== 0 &&
       aggregatedResults.numFailedTests >= this._globalConfig.bail
@@ -535,7 +450,7 @@ class TestScheduler {
       }
 
       try {
-        await this._dispatcher.onRunComplete(contexts, aggregatedResults);
+        await this._dispatcher.onRunComplete(testContexts, aggregatedResults);
       } finally {
         const exitCode = this._globalConfig.testFailureExitCode;
         (0, _exit().default)(exitCode);

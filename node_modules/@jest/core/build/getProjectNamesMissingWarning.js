@@ -29,7 +29,7 @@ function _interopRequireDefault(obj) {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-function getProjectNamesMissingWarning(projectConfigs) {
+function getProjectNamesMissingWarning(projectConfigs, opts) {
   const numberOfProjectsWithoutAName = projectConfigs.filter(
     config => !(0, _getProjectDisplayName.default)(config)
   ).length;
@@ -38,8 +38,18 @@ function getProjectNamesMissingWarning(projectConfigs) {
     return undefined;
   }
 
+  const args = [];
+
+  if (opts.selectProjects) {
+    args.push('--selectProjects');
+  }
+
+  if (opts.ignoreProjects) {
+    args.push('--ignoreProjects');
+  }
+
   return _chalk().default.yellow(
-    `You provided values for --selectProjects but ${
+    `You provided values for ${args.join(' and ')} but ${
       numberOfProjectsWithoutAName === 1
         ? 'a project does not have a name'
         : `${numberOfProjectsWithoutAName} projects do not have a name`

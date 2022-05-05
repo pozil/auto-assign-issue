@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
-exports.buildArgv = void 0;
+exports.buildArgv = buildArgv;
 exports.run = run;
 
 function path() {
@@ -144,7 +144,7 @@ function _interopRequireWildcard(obj, nodeInterop) {
  */
 async function run(maybeArgv, project) {
   try {
-    const argv = buildArgv(maybeArgv);
+    const argv = await buildArgv(maybeArgv);
 
     if (argv.init) {
       await (0, _init.default)();
@@ -169,12 +169,12 @@ async function run(maybeArgv, project) {
   }
 }
 
-const buildArgv = maybeArgv => {
+async function buildArgv(maybeArgv) {
   const version =
     (0, _core().getVersion)() +
     (__dirname.includes(`packages${path().sep}jest-cli`) ? '-dev' : '');
   const rawArgv = maybeArgv || process.argv.slice(2);
-  const argv = (0, _yargs().default)(rawArgv)
+  const argv = await (0, _yargs().default)(rawArgv)
     .usage(args.usage)
     .version(version)
     .alias('help', 'h')
@@ -202,9 +202,7 @@ const buildArgv = maybeArgv => {
       _: argv._
     }
   );
-};
-
-exports.buildArgv = buildArgv;
+}
 
 const getProjectListFromCLIArgs = (argv, project) => {
   const projects = argv.projects ? argv.projects : [];
@@ -241,8 +239,9 @@ const readResultsAndExit = (result, globalConfig) => {
   if (globalConfig.forceExit) {
     if (!globalConfig.detectOpenHandles) {
       console.warn(
-        _chalk().default.bold('Force exiting Jest: ') +
-          'Have you considered using `--detectOpenHandles` to detect ' +
+        `${_chalk().default.bold(
+          'Force exiting Jest: '
+        )}Have you considered using \`--detectOpenHandles\` to detect ` +
           'async operations that kept running after all tests finished?'
       );
     }

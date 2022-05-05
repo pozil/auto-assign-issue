@@ -131,20 +131,12 @@ function _interopRequireWildcard(obj, nodeInterop) {
   return newObj;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const regexToMatcher = testRegex => {
   const regexes = testRegex.map(testRegex => new RegExp(testRegex));
   return path =>
@@ -171,13 +163,11 @@ const hasSCM = changedFilesInfo => {
 };
 
 class SearchSource {
+  _context;
+  _dependencyResolver;
+  _testPathCases = [];
+
   constructor(context) {
-    _defineProperty(this, '_context', void 0);
-
-    _defineProperty(this, '_dependencyResolver', void 0);
-
-    _defineProperty(this, '_testPathCases', []);
-
     const {config} = context;
     this._context = context;
     this._dependencyResolver = null;

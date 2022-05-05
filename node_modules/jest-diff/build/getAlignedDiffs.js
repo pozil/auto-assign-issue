@@ -7,20 +7,12 @@ exports.default = void 0;
 
 var _cleanupSemantic = require('./cleanupSemantic');
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 // Given change op and array of diffs, return concatenated string:
 // * include common strings
 // * include change strings which have argument op with changeColor
@@ -38,17 +30,14 @@ const concatenateRelevantDiffs = (op, diffs, changeColor) =>
   ); // Encapsulate change lines until either a common newline or the end.
 
 class ChangeBuffer {
-  // incomplete line
-  // complete lines
+  op;
+  line; // incomplete line
+
+  lines; // complete lines
+
+  changeColor;
+
   constructor(op, changeColor) {
-    _defineProperty(this, 'op', void 0);
-
-    _defineProperty(this, 'line', void 0);
-
-    _defineProperty(this, 'lines', void 0);
-
-    _defineProperty(this, 'changeColor', void 0);
-
     this.op = op;
     this.line = [];
     this.lines = [];
@@ -122,13 +111,11 @@ class ChangeBuffer {
 } // Encapsulate common and change lines.
 
 class CommonBuffer {
+  deleteBuffer;
+  insertBuffer;
+  lines;
+
   constructor(deleteBuffer, insertBuffer) {
-    _defineProperty(this, 'deleteBuffer', void 0);
-
-    _defineProperty(this, 'insertBuffer', void 0);
-
-    _defineProperty(this, 'lines', void 0);
-
     this.deleteBuffer = deleteBuffer;
     this.insertBuffer = insertBuffer;
     this.lines = [];

@@ -99,8 +99,6 @@ var _FailedTestsCache = _interopRequireDefault(require('./FailedTestsCache'));
 
 var _SearchSource = _interopRequireDefault(require('./SearchSource'));
 
-var _TestWatcher = _interopRequireDefault(require('./TestWatcher'));
-
 var _getChangedFilesPromise = _interopRequireDefault(
   require('./getChangedFilesPromise')
 );
@@ -435,7 +433,7 @@ async function watch(
       return Promise.resolve(null);
     }
 
-    testWatcher = new _TestWatcher.default({
+    testWatcher = new (_jestWatcher().TestWatcher)({
       isWatchMode: true
     });
     _jestUtil().isInteractive &&
@@ -460,7 +458,7 @@ async function watch(
         // The old instance that was passed to Jest will still be interrupted
         // and prevent test runs from the previous run.
 
-        testWatcher = new _TestWatcher.default({
+        testWatcher = new (_jestWatcher().TestWatcher)({
           isWatchMode: true
         }); // Do not show any Watch Usage related stuff when running in a
         // non-interactive environment
@@ -493,10 +491,13 @@ async function watch(
         // terminal and give just a little bit of extra space so they fit below
         // `preRunMessagePrint` message nicely.
         console.error(
-          '\n\n' +
-            (0, _jestMessageUtil().formatExecError)(error, contexts[0].config, {
+          `\n\n${(0, _jestMessageUtil().formatExecError)(
+            error,
+            contexts[0].config,
+            {
               noStackTrace: false
-            })
+            }
+          )}`
         )
     );
   };
@@ -718,52 +719,49 @@ const usage = (globalConfig, watchPlugins, delimiter = '\n') => {
   const messages = [
     (0, _activeFiltersMessage.default)(globalConfig),
     globalConfig.testPathPattern || globalConfig.testNamePattern
-      ? _chalk().default.dim(' \u203A Press ') +
-        'c' +
-        _chalk().default.dim(' to clear filters.')
+      ? `${_chalk().default.dim(' \u203A Press ')}c${_chalk().default.dim(
+          ' to clear filters.'
+        )}`
       : null,
-    '\n' + _chalk().default.bold('Watch Usage'),
+    `\n${_chalk().default.bold('Watch Usage')}`,
     globalConfig.watch
-      ? _chalk().default.dim(' \u203A Press ') +
-        'a' +
-        _chalk().default.dim(' to run all tests.')
+      ? `${_chalk().default.dim(' \u203A Press ')}a${_chalk().default.dim(
+          ' to run all tests.'
+        )}`
       : null,
     globalConfig.onlyFailures
-      ? _chalk().default.dim(' \u203A Press ') +
-        'f' +
-        _chalk().default.dim(' to quit "only failed tests" mode.')
-      : _chalk().default.dim(' \u203A Press ') +
-        'f' +
-        _chalk().default.dim(' to run only failed tests.'),
+      ? `${_chalk().default.dim(' \u203A Press ')}f${_chalk().default.dim(
+          ' to quit "only failed tests" mode.'
+        )}`
+      : `${_chalk().default.dim(' \u203A Press ')}f${_chalk().default.dim(
+          ' to run only failed tests.'
+        )}`,
     (globalConfig.watchAll ||
       globalConfig.testPathPattern ||
       globalConfig.testNamePattern) &&
     !globalConfig.noSCM
-      ? _chalk().default.dim(' \u203A Press ') +
-        'o' +
-        _chalk().default.dim(' to only run tests related to changed files.')
+      ? `${_chalk().default.dim(' \u203A Press ')}o${_chalk().default.dim(
+          ' to only run tests related to changed files.'
+        )}`
       : null,
     ...(0, _watchPluginsHelpers.getSortedUsageRows)(
       watchPlugins,
       globalConfig
     ).map(
       plugin =>
-        _chalk().default.dim(' \u203A Press') +
-        ' ' +
-        plugin.key +
-        ' ' +
-        _chalk().default.dim(`to ${plugin.prompt}.`)
+        `${_chalk().default.dim(' \u203A Press')} ${
+          plugin.key
+        } ${_chalk().default.dim(`to ${plugin.prompt}.`)}`
     ),
-    _chalk().default.dim(' \u203A Press ') +
-      'Enter' +
-      _chalk().default.dim(' to trigger a test run.')
+    `${_chalk().default.dim(' \u203A Press ')}Enter${_chalk().default.dim(
+      ' to trigger a test run.'
+    )}`
   ];
-  return messages.filter(message => !!message).join(delimiter) + '\n';
+  return `${messages.filter(message => !!message).join(delimiter)}\n`;
 };
 
 const showToggleUsagePrompt = () =>
   '\n' +
-  _chalk().default.bold('Watch Usage: ') +
-  _chalk().default.dim('Press ') +
-  'w' +
-  _chalk().default.dim(' to show more.');
+  `${_chalk().default.bold('Watch Usage: ')}${_chalk().default.dim(
+    'Press '
+  )}w${_chalk().default.dim(' to show more.')}`;

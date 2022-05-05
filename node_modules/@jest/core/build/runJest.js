@@ -271,10 +271,9 @@ async function runJest({
 
     if (noSCM) {
       process.stderr.write(
-        '\n' +
-          _chalk().default.bold('--watch') +
-          ' is not supported without git/hg, please use --watchAll ' +
-          '\n'
+        `\n${_chalk().default.bold(
+          '--watch'
+        )} is not supported without git/hg, please use --watchAll\n`
       );
       (0, _exit().default)(1);
     }
@@ -301,6 +300,17 @@ async function runJest({
       };
     })
   );
+
+  if (globalConfig.shard) {
+    if (typeof sequencer.shard !== 'function') {
+      throw new Error(
+        `Shard ${globalConfig.shard.shardIndex}/${globalConfig.shard.shardCount} requested, but test sequencer ${Sequencer.name} in ${globalConfig.testSequencer} has no shard method.`
+      );
+    }
+
+    allTests = await sequencer.shard(allTests, globalConfig.shard);
+  }
+
   allTests = await sequencer.sort(allTests);
 
   if (globalConfig.listTests) {
@@ -330,17 +340,10 @@ async function runJest({
   const hasTests = allTests.length > 0;
 
   if (!hasTests) {
-    const noTestsFoundMessage = (0, _getNoTestsFoundMessage.default)(
-      testRunData,
-      globalConfig
-    );
+    const {exitWith0, message: noTestsFoundMessage} = (0,
+    _getNoTestsFoundMessage.default)(testRunData, globalConfig);
 
-    if (
-      globalConfig.passWithNoTests ||
-      globalConfig.findRelatedTests ||
-      globalConfig.lastCommit ||
-      globalConfig.onlyChanged
-    ) {
+    if (exitWith0) {
       new (_console().CustomConsole)(outputStream, outputStream).log(
         noTestsFoundMessage
       );
@@ -397,12 +400,12 @@ async function runJest({
   const scheduler = await (0, _TestScheduler.createTestScheduler)(
     globalConfig,
     {
-      startRun
-    },
-    testSchedulerContext
+      startRun,
+      ...testSchedulerContext
+    }
   );
   const results = await scheduler.scheduleTests(allTests, testWatcher);
-  await sequencer.cacheResults(allTests, results);
+  sequencer.cacheResults(allTests, results);
 
   if (hasTests) {
     await (0, _runGlobalHook.default)({

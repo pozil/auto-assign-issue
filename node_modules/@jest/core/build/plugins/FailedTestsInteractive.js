@@ -23,32 +23,15 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 class FailedTestsInteractivePlugin extends _jestWatcher().BaseWatchPlugin {
-  constructor(...args) {
-    super(...args);
-
-    _defineProperty(this, '_failedTestAssertions', void 0);
-
-    _defineProperty(
-      this,
-      '_manager',
-      new _FailedTestsInteractiveMode.default(this._stdout)
-    );
-  }
+  _failedTestAssertions;
+  _manager = new _FailedTestsInteractiveMode.default(this._stdout);
 
   apply(hooks) {
     hooks.onTestRunComplete(results => {

@@ -93,44 +93,31 @@ function _interopRequireWildcard(obj, nodeInterop) {
   return newObj;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const isDarwin = process.platform === 'darwin';
 const icon = path().resolve(__dirname, '../assets/jest_logo.png');
 
 class NotifyReporter extends _BaseReporter.default {
-  constructor(globalConfig, startRun, context) {
+  _notifier = loadNotifier();
+  _globalConfig;
+  _context;
+  static filename = __filename;
+
+  constructor(globalConfig, context) {
     super();
-
-    _defineProperty(this, '_notifier', loadNotifier());
-
-    _defineProperty(this, '_startRun', void 0);
-
-    _defineProperty(this, '_globalConfig', void 0);
-
-    _defineProperty(this, '_context', void 0);
-
     this._globalConfig = globalConfig;
-    this._startRun = startRun;
     this._context = context;
   }
 
-  onRunComplete(contexts, result) {
+  onRunComplete(testContexts, result) {
     const success =
       result.numFailedTests === 0 && result.numRuntimeErrorTestSuites === 0;
-    const firstContext = contexts.values().next();
+    const firstContext = testContexts.values().next();
     const hasteFS =
       firstContext && firstContext.value && firstContext.value.hasteFS;
     let packageName;
@@ -168,6 +155,7 @@ class NotifyReporter extends _BaseReporter.default {
       )} passed`;
 
       this._notifier.notify({
+        hint: 'int:transient:1',
         icon,
         message,
         timeout: false,
@@ -189,7 +177,7 @@ class NotifyReporter extends _BaseReporter.default {
         Math.ceil(Number.isNaN(failed) ? 0 : failed * 100)
       );
       const message = util().format(
-        (isDarwin ? '\u26D4\uFE0F ' : '') + '%d of %d tests failed',
+        `${isDarwin ? '\u26D4\uFE0F ' : ''}%d of %d tests failed`,
         result.numFailedTests,
         result.numTotalTests
       );
@@ -199,6 +187,7 @@ class NotifyReporter extends _BaseReporter.default {
 
       if (!watchMode) {
         this._notifier.notify({
+          hint: 'int:transient:1',
           icon,
           message,
           timeout: false,
@@ -207,8 +196,10 @@ class NotifyReporter extends _BaseReporter.default {
       } else {
         this._notifier.notify(
           {
+            // @ts-expect-error - not all options are supported by all systems (specifically `actions` and `hint`)
             actions: [restartAnswer, quitAnswer],
             closeLabel: 'Close',
+            hint: 'int:transient:1',
             icon,
             message,
             timeout: false,
@@ -224,8 +215,11 @@ class NotifyReporter extends _BaseReporter.default {
               return;
             }
 
-            if (metadata.activationValue === restartAnswer) {
-              this._startRun(this._globalConfig);
+            if (
+              metadata.activationValue === restartAnswer &&
+              this._context.startRun
+            ) {
+              this._context.startRun(this._globalConfig);
             }
           }
         );
@@ -238,8 +232,6 @@ class NotifyReporter extends _BaseReporter.default {
 }
 
 exports.default = NotifyReporter;
-
-_defineProperty(NotifyReporter, 'filename', __filename);
 
 function loadNotifier() {
   try {

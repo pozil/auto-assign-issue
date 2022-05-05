@@ -45,8 +45,8 @@ const diffStringsUnified = (a, b, options) => {
     const isMultiline = a.includes('\n') || b.includes('\n'); // getAlignedDiffs assumes that a newline was appended to the strings.
 
     const diffs = diffStringsRaw(
-      isMultiline ? a + '\n' : a,
-      isMultiline ? b + '\n' : b,
+      isMultiline ? `${a}\n` : a,
+      isMultiline ? `${b}\n` : b,
       true // cleanupSemantic
     );
 

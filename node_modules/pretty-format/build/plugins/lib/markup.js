@@ -42,20 +42,16 @@ const printProps = (keys, props, config, indentation, depth, refs, printer) => {
             indentation;
         }
 
-        printed = '{' + printed + '}';
+        printed = `{${printed}}`;
       }
 
-      return (
+      return `${
         config.spacingInner +
         indentation +
         colors.prop.open +
         key +
-        colors.prop.close +
-        '=' +
-        colors.value.open +
-        printed +
-        colors.value.close
-      );
+        colors.prop.close
+      }=${colors.value.open}${printed}${colors.value.close}`;
     })
     .join('');
 }; // Return empty string if children is empty.
@@ -87,13 +83,9 @@ exports.printText = printText;
 
 const printComment = (comment, config) => {
   const commentColor = config.colors.comment;
-  return (
-    commentColor.open +
-    '<!--' +
-    (0, _escapeHTML.default)(comment) +
-    '-->' +
+  return `${commentColor.open}<!--${(0, _escapeHTML.default)(comment)}-->${
     commentColor.close
-  );
+  }`;
 }; // Separate the functions to format props, children, and element,
 // so a plugin could override a particular function, if needed.
 // Too bad, so sad: the traditional (but unnecessary) space
@@ -109,45 +101,25 @@ const printElement = (
   indentation
 ) => {
   const tagColor = config.colors.tag;
-  return (
-    tagColor.open +
-    '<' +
-    type +
-    (printedProps &&
-      tagColor.close +
-        printedProps +
-        config.spacingOuter +
-        indentation +
-        tagColor.open) +
-    (printedChildren
-      ? '>' +
-        tagColor.close +
-        printedChildren +
-        config.spacingOuter +
-        indentation +
-        tagColor.open +
-        '</' +
-        type
-      : (printedProps && !config.min ? '' : ' ') + '/') +
-    '>' +
-    tagColor.close
-  );
+  return `${tagColor.open}<${type}${
+    printedProps &&
+    tagColor.close +
+      printedProps +
+      config.spacingOuter +
+      indentation +
+      tagColor.open
+  }${
+    printedChildren
+      ? `>${tagColor.close}${printedChildren}${config.spacingOuter}${indentation}${tagColor.open}</${type}`
+      : `${printedProps && !config.min ? '' : ' '}/`
+  }>${tagColor.close}`;
 };
 
 exports.printElement = printElement;
 
 const printElementAsLeaf = (type, config) => {
   const tagColor = config.colors.tag;
-  return (
-    tagColor.open +
-    '<' +
-    type +
-    tagColor.close +
-    ' …' +
-    tagColor.open +
-    ' />' +
-    tagColor.close
-  );
+  return `${tagColor.open}<${type}${tagColor.close} …${tagColor.open} />${tagColor.close}`;
 };
 
 exports.printElementAsLeaf = printElementAsLeaf;

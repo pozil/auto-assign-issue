@@ -15,28 +15,18 @@ function _jestWatcher() {
   return data;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 class UpdateSnapshotsPlugin extends _jestWatcher().BaseWatchPlugin {
+  _hasSnapshotFailure;
+  isInternal;
+
   constructor(options) {
     super(options);
-
-    _defineProperty(this, '_hasSnapshotFailure', void 0);
-
-    _defineProperty(this, 'isInternal', void 0);
-
     this.isInternal = true;
     this._hasSnapshotFailure = false;
   }

@@ -31,28 +31,20 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const {ICONS} = _jestUtil().specialChars;
 
 class VerboseReporter extends _DefaultReporter.default {
+  _globalConfig;
+  static filename = __filename;
+
   constructor(globalConfig) {
     super(globalConfig);
-
-    _defineProperty(this, '_globalConfig', void 0);
-
     this._globalConfig = globalConfig;
   } // Verbose mode is for debugging. Buffering of output is undesirable.
   // See https://github.com/facebook/jest/issues/8208
@@ -165,7 +157,7 @@ class VerboseReporter extends _DefaultReporter.default {
       : '';
 
     this._logLine(
-      status + ' ' + _chalk().default.dim(test.title + time),
+      `${status} ${_chalk().default.dim(test.title + time)}`,
       indentLevel
     );
   }
@@ -222,5 +214,3 @@ class VerboseReporter extends _DefaultReporter.default {
 }
 
 exports.default = VerboseReporter;
-
-_defineProperty(VerboseReporter, 'filename', __filename);

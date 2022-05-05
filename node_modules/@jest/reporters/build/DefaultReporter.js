@@ -25,6 +25,16 @@ function _console() {
   return data;
 }
 
+function _jestMessageUtil() {
+  const data = require('jest-message-util');
+
+  _jestMessageUtil = function () {
+    return data;
+  };
+
+  return data;
+}
+
 function _jestUtil() {
   const data = require('jest-util');
 
@@ -47,39 +57,26 @@ function _interopRequireDefault(obj) {
   return obj && obj.__esModule ? obj : {default: obj};
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const TITLE_BULLET = _chalk().default.bold('\u25cf ');
 
 class DefaultReporter extends _BaseReporter.default {
-  // ANSI clear sequence for the last printed status
+  _clear; // ANSI clear sequence for the last printed status
+
+  _err;
+  _globalConfig;
+  _out;
+  _status;
+  _bufferedOutput;
+  static filename = __filename;
+
   constructor(globalConfig) {
     super();
-
-    _defineProperty(this, '_clear', void 0);
-
-    _defineProperty(this, '_err', void 0);
-
-    _defineProperty(this, '_globalConfig', void 0);
-
-    _defineProperty(this, '_out', void 0);
-
-    _defineProperty(this, '_status', void 0);
-
-    _defineProperty(this, '_bufferedOutput', void 0);
-
     this._globalConfig = globalConfig;
     this._clear = '';
     this._out = process.stdout.write.bind(process.stdout);
@@ -218,19 +215,49 @@ class DefaultReporter extends _BaseReporter.default {
     this._status.testFinished(config, testResult, aggregatedResults);
   }
 
-  printTestFileHeader(_testPath, config, result) {
+  printTestFileHeader(testPath, config, result) {
+    // log retry errors if any exist
+    result.testResults.forEach(testResult => {
+      const testRetryReasons = testResult.retryReasons;
+
+      if (testRetryReasons && testRetryReasons.length > 0) {
+        this.log(
+          `${_chalk().default.reset.inverse.bold.yellow(
+            ' LOGGING RETRY ERRORS '
+          )} ${_chalk().default.bold(testResult.fullName)}`
+        );
+        testRetryReasons.forEach((retryReasons, index) => {
+          let {message, stack} = (0,
+          _jestMessageUtil().separateMessageFromStack)(retryReasons);
+          stack = this._globalConfig.noStackTrace
+            ? ''
+            : _chalk().default.dim(
+                (0, _jestMessageUtil().formatStackTrace)(
+                  stack,
+                  config,
+                  this._globalConfig,
+                  testPath
+                )
+              );
+          message = (0, _jestMessageUtil().indentAllLines)(message);
+          this.log(
+            `${_chalk().default.reset.inverse.bold.blueBright(
+              ` RETRY ${index + 1} `
+            )}\n`
+          );
+          this.log(`${message}\n${stack}\n`);
+        });
+      }
+    });
     this.log((0, _getResultHeader.default)(result, this._globalConfig, config));
 
     if (result.console) {
       this.log(
-        '  ' +
-          TITLE_BULLET +
-          'Console\n\n' +
-          (0, _console().getConsoleOutput)(
-            result.console,
-            config,
-            this._globalConfig
-          )
+        `  ${TITLE_BULLET}Console\n\n${(0, _console().getConsoleOutput)(
+          result.console,
+          config,
+          this._globalConfig
+        )}`
       );
     }
   }
@@ -250,5 +277,3 @@ class DefaultReporter extends _BaseReporter.default {
 }
 
 exports.default = DefaultReporter;
-
-_defineProperty(DefaultReporter, 'filename', __filename);

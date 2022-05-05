@@ -15,28 +15,15 @@ function _jestWatcher() {
   return data;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
-
-// TODO: Make underscored props `private`
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 class TestPathPatternPrompt extends _jestWatcher().PatternPrompt {
   constructor(pipe, prompt) {
-    super(pipe, prompt);
-
-    _defineProperty(this, '_searchSources', void 0);
-
-    this._entityName = 'filenames';
+    super(pipe, prompt, 'filenames');
   }
 
   _onChange(pattern, options) {
@@ -53,28 +40,6 @@ class TestPathPatternPrompt extends _jestWatcher().PatternPrompt {
       this._currentUsageRows,
       pipe
     );
-  }
-
-  _getMatchedTests(pattern) {
-    let regex;
-
-    try {
-      regex = new RegExp(pattern, 'i');
-    } catch {}
-
-    let tests = [];
-
-    if (regex && this._searchSources) {
-      this._searchSources.forEach(({searchSource}) => {
-        tests = tests.concat(searchSource.findMatchingTests(pattern).tests);
-      });
-    }
-
-    return tests;
-  }
-
-  updateSearchSources(searchSources) {
-    this._searchSources = searchSources;
   }
 }
 

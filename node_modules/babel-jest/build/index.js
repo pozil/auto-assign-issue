@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
-exports.default = void 0;
+exports.default = exports.createTransformer = void 0;
 
 function _crypto() {
   const data = require('crypto');
@@ -166,7 +166,7 @@ function getCacheKeyFromConfig(
 ) {
   const {config, configString, instrument} = transformOptions;
   const configPath = [babelOptions.config || '', babelOptions.babelrc || ''];
-  return (0, _crypto().createHash)('md5')
+  return (0, _crypto().createHash)('sha256')
     .update(THIS_FILE)
     .update('\0', 'utf8')
     .update(JSON.stringify(babelOptions.options))
@@ -186,7 +186,8 @@ function getCacheKeyFromConfig(
     .update(process.env.BABEL_ENV || '')
     .update('\0', 'utf8')
     .update(process.version)
-    .digest('hex');
+    .digest('hex')
+    .substring(0, 32);
 }
 
 function loadBabelConfig(cwd, filename, transformOptions) {
@@ -258,10 +259,11 @@ const createTransformer = userOptions => {
       _transformOptions$sup3,
       _transformOptions$sup4;
 
-    const {cwd} = transformOptions.config; // `cwd` first to allow incoming options to override it
+    const {cwd, rootDir} = transformOptions.config; // `cwd` and `root` first to allow incoming options to override it
 
     return {
       cwd,
+      root: rootDir,
       ...options,
       caller: {
         ...options.caller,
@@ -345,7 +347,9 @@ const createTransformer = userOptions => {
         }
       }
 
-      return sourceText;
+      return {
+        code: sourceText
+      };
     },
 
     async processAsync(sourceText, sourcePath, transformOptions) {
@@ -371,16 +375,18 @@ const createTransformer = userOptions => {
         }
       }
 
-      return sourceText;
+      return {
+        code: sourceText
+      };
     }
   };
 };
 
-const transformer = {
-  ...createTransformer(),
-  // Assigned here so only the exported transformer has `createTransformer`,
-  // instead of all created transformers by the function
+exports.createTransformer = createTransformer;
+const transformerFactory = {
+  // Assigned here, instead of as a separate export, due to limitations in Jest's
+  // requireOrImportModule, requiring all exports to be on the `default` export
   createTransformer
 };
-var _default = transformer;
+var _default = transformerFactory;
 exports.default = _default;
