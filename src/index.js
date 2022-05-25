@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 const { runAction } = require('./action');
+const {getBooleanInput} = require("@actions/core");
 
 try {
     // Get params
@@ -10,6 +11,7 @@ try {
     const numOfAssigneeString = core.getInput('numOfAssignee', {
         require: false
     });
+    const removeAssignees = core.getBooleanInput('removeAssignees', { required: false });
 
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);
@@ -23,7 +25,8 @@ try {
         contextPayload,
         assigneesString,
         teamsString,
-        numOfAssigneeString
+        numOfAssigneeString,
+        removeAssignees
     );
 } catch (error) {
     core.setFailed(error.message);
