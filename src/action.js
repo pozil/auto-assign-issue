@@ -50,7 +50,7 @@ const runAction = async (
     // Get repo and issue info from context
     const { repository } = context;
 
-    let partialIssue = context.issue || context.pull_request
+    let issue = context.issue || context.pull_request
 
     // if the issue is not found directly, maybe it came for a card movement with a linked issue
     if (!issue) {
