@@ -11,7 +11,7 @@ try {
     const numOfAssigneeString = core.getInput('numOfAssignee', {
         require: false
     });
-    const removeAssignees = core.getBooleanInput('removeAssignees', { required: false });
+    const removePreviousAssignees = core.getBooleanInput('removePreviousAssignees', { required: false });
 
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);
@@ -26,7 +26,7 @@ try {
         assigneesString,
         teamsString,
         numOfAssigneeString,
-        removeAssignees
+        removePreviousAssignees
     );
 } catch (error) {
     core.setFailed(error.message);

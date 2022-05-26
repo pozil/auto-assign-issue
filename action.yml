@@ -13,7 +13,7 @@ inputs:
     numOfAssignee:
         description: 'Number of random assignee'
         required: false
-    removeAssignees:
+    removePreviousAssignees:
         description: 'Flag to remove assignees before assign them (useful the issue want to be reasigned due to some changes).'
         required: false
 
