@@ -27,7 +27,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: 'Auto-assign issue'
-              uses: pozil/auto-assign-issue@v1.5.0
+              uses: pozil/auto-assign-issue@v1
               with:
                   assignees: octocat,cat,dog
                   numOfAssignee: 2
@@ -37,7 +37,7 @@ This other configuration assigns issues to a random member of the `support` team
 
 ```yml
 - name: 'Auto-assign issue'
-    uses: pozil/auto-assign-issue@v1.5.0
+    uses: pozil/auto-assign-issue@v1
     with:
         repo-token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
         teams: support
