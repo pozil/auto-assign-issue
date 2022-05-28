@@ -37,18 +37,28 @@ const getTeamMembers = async (octokit, org, teamNames) => {
  * @param {string} assigneesString
  * @param {string} teamsString
  * @param {string} numOfAssigneeString
+ * @param {boolean} removePreviousAssignees
  */
 const runAction = async (
     octokit,
     context,
     assigneesString,
     teamsString,
-    numOfAssigneeString
+    numOfAssigneeString,
+    removePreviousAssignees
 ) => {
     // Get repo and issue info from context
     const { repository } = context;
 
-    const issue = context.issue || context.pull_request;
+    let issue = context.issue || context.pull_request
+
+    // if the issue is not found directly, maybe it came for a card movement with a linked issue
+    if (!issue) {
+        if (content?.event?.project_card?.content_url?.includes('issues')) {
+            const contentUrlParts = content.event.project_card.content_url.split('/');
+            issue = contentUrlParts[contentUrlParts.length - 1];
+        }
+    }
 
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
@@ -103,6 +113,14 @@ const runAction = async (
     console.log(
         `Assigning issue ${issue.number} to users ${JSON.stringify(assignees)}`
     );
+    // if before assigning the current ones should be removed, do it
+    if (removePreviousAssignees) {
+        await octokit.rest.issues.removeAssignees({
+            owner,
+            repo,
+            issue_number: issue.number
+        });
+    }
     await octokit.rest.issues.addAssignees({
         owner,
         repo,
