@@ -14,18 +14,32 @@ const CONTEXT_PAYLOAD = {
 };
 const PR_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
-    issue: { number: 666 }
+    issue: { number: 667 }
+};
+
+const PROJECT_CONTEXT_PAYLOAD = {
+    repository: { full_name: 'mockOrgCard/mockRepoCard' },
+    event: {
+        project_card: {
+            content_url:
+                'https://github.com/mockOrgCard/mockRepoCard/issues/668'
+        }
+    }
 };
 
 // Mock Octokit
 const assignUsersToIssueMock = jest.fn(() => Promise.resolve());
+const removeUsersFromIssueMock = jest.fn(() => Promise.resolve());
 const listTeamMembersMock = jest.fn((params) =>
     Promise.resolve(TEAMS_MEMBERS[params.team_slug])
 );
 const octokitMock = {
     rest: {
         teams: { listMembersInOrg: listTeamMembersMock },
-        issues: { addAssignees: assignUsersToIssueMock }
+        issues: {
+            addAssignees: assignUsersToIssueMock,
+            removeAssignees: removeUsersFromIssueMock
+        }
     }
 };
 
@@ -103,6 +117,7 @@ describe('action', () => {
             );
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(removeUsersFromIssueMock).not.toHaveBeenCalled();
             expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
             expect(assignUsersToIssueMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
@@ -189,10 +204,41 @@ describe('action', () => {
             expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
             expect(assignUsersToIssueMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
-                issue_number: 666,
+                issue_number: 667,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
             });
+        });
+
+        it('works with project card events', async () => {
+            await runAction(
+                octokitMock,
+                PROJECT_CONTEXT_PAYLOAD,
+                'user1,user2',
+                null,
+                null
+            );
+
+            expect(assignUsersToIssueMock).toHaveBeenCalled();
+            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+                assignees: ['user1', 'user2'],
+                issue_number: 668,
+                owner: 'mockOrgCard',
+                repo: 'mockRepoCard'
+            });
+        });
+
+        it('removes previous assignees', async () => {
+            await runAction(
+                octokitMock,
+                CONTEXT_PAYLOAD,
+                'user1,user2,userA2',
+                null,
+                null,
+                true
+            );
+
+            expect(removeUsersFromIssueMock).toHaveBeenCalled();
         });
     });
 });
