@@ -15,7 +15,7 @@ npm install @jridgewell/set-array
 ## Usage
 
 ```js
-import { SetArray, get, put } from '@jridgewell/set-array';
+import { SetArray, get, put, pop } from '@jridgewell/set-array';
 
 const sa = new SetArray();
 
@@ -29,4 +29,9 @@ assert.deepEqual(sa.array, [ 'first', 'second' ]);
 
 index = get(sa, 'first');
 assert.strictEqual(index, 0);
+
+pop(sa);
+index = get(sa, 'second');
+assert.strictEqual(index, undefined);
+assert.deepEqual(sa.array, [ 'first' ]);
 ```
