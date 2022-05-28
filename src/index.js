@@ -1,7 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 const { runAction } = require('./action');
-const {getBooleanInput} = require("@actions/core");
 
 try {
     // Get params
@@ -11,7 +10,10 @@ try {
     const numOfAssigneeString = core.getInput('numOfAssignee', {
         require: false
     });
-    const removePreviousAssignees = core.getBooleanInput('removePreviousAssignees', { required: false });
+    const removePreviousAssignees = core.getBooleanInput(
+        'removePreviousAssignees',
+        { required: false }
+    );
 
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);

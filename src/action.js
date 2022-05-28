@@ -45,24 +45,27 @@ const runAction = async (
     assigneesString,
     teamsString,
     numOfAssigneeString,
-    removePreviousAssignees
+    removePreviousAssignees = false
 ) => {
     // Get repo and issue info from context
     const { repository } = context;
 
-    let issue = context.issue || context.pull_request
+    let issue = context.issue?.number || context.pull_request?.number;
 
-    // if the issue is not found directly, maybe it came for a card movement with a linked issue
-    if (!issue) {
-        if (content?.event?.project_card?.content_url?.includes('issues')) {
-            const contentUrlParts = content.event.project_card.content_url.split('/');
-            issue = contentUrlParts[contentUrlParts.length - 1];
-        }
+    // If the issue is not found directly, maybe it came for a card movement with a linked issue
+    if (
+        !issue &&
+        context?.event?.project_card?.content_url?.includes('issues')
+    ) {
+        const contentUrlParts =
+            context.event.project_card.content_url.split('/');
+        issue = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
     }
 
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
+
     const [owner, repo] = repository.full_name.split('/');
     // Check params
     if (
@@ -111,20 +114,20 @@ const runAction = async (
 
     // Assign issue
     console.log(
-        `Assigning issue ${issue.number} to users ${JSON.stringify(assignees)}`
+        `Assigning issue ${issue} to users ${JSON.stringify(assignees)}`
     );
     // if before assigning the current ones should be removed, do it
     if (removePreviousAssignees) {
         await octokit.rest.issues.removeAssignees({
             owner,
             repo,
-            issue_number: issue.number
+            issue_number: issue
         });
     }
     await octokit.rest.issues.addAssignees({
         owner,
         repo,
-        issue_number: issue.number,
+        issue_number: issue,
         assignees
     });
 };
