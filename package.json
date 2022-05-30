@@ -1,6 +1,6 @@
 {
     "name": "auto-assign-issue",
-    "version": "1.6.1",
+    "version": "1.6.2",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
@@ -44,10 +44,10 @@
     },
     "devDependencies": {
         "eslint": "^8.16.0",
-        "eslint-plugin-jest": "^26.3.0",
+        "eslint-plugin-jest": "^26.4.5",
         "husky": "^8.0.1",
         "jest": "^28.1.0",
-        "lint-staged": "^12.4.2",
+        "lint-staged": "^12.4.3",
         "prettier": "^2.6.2"
     },
     "engines": {

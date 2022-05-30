@@ -31,6 +31,13 @@ export class InvalidArgumentError extends CommanderError {
 }
 export { InvalidArgumentError as InvalidOptionArgumentError }; // deprecated old name
 
+export interface ErrorOptions { // optional parameter for error()
+  /** an id string representing the error */
+  code?: string;
+  /** suggested exit code which could be used with process.exit */
+  exitCode?: number;
+}
+
 export class Argument {
   description: string;
   required: boolean;
@@ -61,18 +68,18 @@ export class Argument {
   /**
    * Only allow argument value to be one of choices.
    */
-  choices(values: string[]): this;
+  choices(values: readonly string[]): this;
 
   /**
-   * Make option-argument required.
+   * Make argument required.
    */
   argRequired(): this;
 
   /**
-   * Make option-argument optional.
+   * Make argument optional.
    */
   argOptional(): this;
-  }
+}
 
 export class Option {
   flags: string;
@@ -98,6 +105,42 @@ export class Option {
    * Set the default value, and optionally supply the description to be displayed in the help.
    */
   default(value: unknown, description?: string): this;
+
+  /**
+   * Preset to use when option used without option-argument, especially optional but also boolean and negated.
+   * The custom processing (parseArg) is called.
+   *
+   * @example
+   * ```ts
+   * new Option('--color').default('GREYSCALE').preset('RGB');
+   * new Option('--donate [amount]').preset('20').argParser(parseFloat);
+   * ```
+   */
+  preset(arg: unknown): this;
+
+  /**
+   * Add option name(s) that conflict with this option.
+   * An error will be displayed if conflicting options are found during parsing.
+   *
+   * @example
+   * ```ts
+   * new Option('--rgb').conflicts('cmyk');
+   * new Option('--js').conflicts(['ts', 'jsx']);
+   * ```
+   */
+  conflicts(names: string | string[]): this;
+
+  /**
+   * Specify implied option values for when this option is set and the implied options are not.
+   *
+   * The custom processing (parseArg) is not called on the implied values.
+   *
+   * @example
+   * program
+   *   .addOption(new Option('--log', 'write logging information to file'))
+   *   .addOption(new Option('--trace', 'log extra details').implies({ log: 'trace.txt' }));
+   */
+  implies(optionValues: OptionValues): this;
 
   /**
    * Set environment variable to check for option value.
@@ -128,7 +171,7 @@ export class Option {
   /**
    * Only allow option value to be one of choices.
    */
-  choices(values: string[]): this;
+  choices(values: readonly string[]): this;
 
   /**
    * Return option name.
@@ -140,6 +183,13 @@ export class Option {
    * as a object attribute key.
    */
   attributeName(): string;
+
+  /**
+   * Return whether a boolean option.
+   *
+   * Options are one of boolean, negated, required argument, or optional argument.
+   */
+  isBoolean(): boolean;
 }
 
 export class Help {
@@ -152,7 +202,7 @@ export class Help {
 
   /** Get the command term to show in the list of subcommands. */
   subcommandTerm(cmd: Command): string;
-  /** Get the command description to show in the list of subcommands. */
+  /** Get the command summary to show in the list of subcommands. */
   subcommandDescription(cmd: Command): string;
   /** Get the option term to show in the list of options. */
   optionTerm(option: Option): string;
@@ -320,8 +370,8 @@ export class Command {
    *
    * @returns `this` command for chaining
    */
-    argument<T>(flags: string, description: string, fn: (value: string, previous: T) => T, defaultValue?: T): this;
-    argument(name: string, description?: string, defaultValue?: unknown): this;
+  argument<T>(flags: string, description: string, fn: (value: string, previous: T) => T, defaultValue?: T): this;
+  argument(name: string, description?: string, defaultValue?: unknown): this;
 
   /**
    * Define argument syntax for command, adding a prepared argument.
@@ -367,6 +417,11 @@ export class Command {
    * Register callback to use as replacement for calling process.exit.
    */
   exitOverride(callback?: (err: CommanderError) => never|void): this;
+
+  /**
+   * Display error message and exit (or call exitOverride).
+   */
+  error(message: string, errorOptions?: ErrorOptions): never;
 
   /**
    * You can customise the help with a subclass of Help by overriding createHelp,
@@ -419,7 +474,7 @@ export class Command {
    */
   showSuggestionAfterError(displaySuggestion?: boolean): this;
 
-   /**
+  /**
    * Register callback `fn` for the command.
    *
    * @example
@@ -480,10 +535,10 @@ export class Command {
    *
    * @returns `this` command for chaining
    */
-  option(flags: string, description?: string, defaultValue?: string | boolean): this;
+  option(flags: string, description?: string, defaultValue?: string | boolean | string[]): this;
   option<T>(flags: string, description: string, fn: (value: string, previous: T) => T, defaultValue?: T): this;
   /** @deprecated since v7, instead use choices or a custom function */
-  option(flags: string, description: string, regexp: RegExp, defaultValue?: string | boolean): this;
+  option(flags: string, description: string, regexp: RegExp, defaultValue?: string | boolean | string[]): this;
 
   /**
    * Define a required option, which must have a value after parsing. This usually means
@@ -491,10 +546,10 @@ export class Command {
    *
    * The `flags` string contains the short and/or long flags, separated by comma, a pipe or space.
    */
-  requiredOption(flags: string, description?: string, defaultValue?: string | boolean): this;
+  requiredOption(flags: string, description?: string, defaultValue?: string | boolean | string[]): this;
   requiredOption<T>(flags: string, description: string, fn: (value: string, previous: T) => T, defaultValue?: T): this;
   /** @deprecated since v7, instead use choices or a custom function */
-  requiredOption(flags: string, description: string, regexp: RegExp, defaultValue?: string | boolean): this;
+  requiredOption(flags: string, description: string, regexp: RegExp, defaultValue?: string | boolean | string[]): this;
 
   /**
    * Factory routine to create a new unattached option.
@@ -542,7 +597,7 @@ export class Command {
    */
   getOptionValueSource(key: string): OptionValueSource;
 
-   /**
+  /**
    * Alter parsing of short flags with optional values.
    *
    * @example
@@ -606,7 +661,7 @@ export class Command {
    *
    * @returns `this` command for chaining
    */
-  parse(argv?: string[], options?: ParseOptions): this;
+  parse(argv?: readonly string[], options?: ParseOptions): this;
 
   /**
    * Parse `argv`, setting options and invoking commands when defined.
@@ -625,7 +680,7 @@ export class Command {
    *
    * @returns Promise
    */
-  parseAsync(argv?: string[], options?: ParseOptions): Promise<this>;
+  parseAsync(argv?: readonly string[], options?: ParseOptions): Promise<this>;
 
   /**
    * Parse options from `argv` removing known options,
@@ -640,9 +695,14 @@ export class Command {
   parseOptions(argv: string[]): ParseOptionsResult;
 
   /**
-   * Return an object containing options as key-value pairs
+   * Return an object containing local option values as key-value pairs
    */
   opts<T extends OptionValues>(): T;
+
+  /**
+   * Return an object containing merged local and global option values as key-value pairs.
+   */
+  optsWithGlobals<T extends OptionValues>(): T;
 
   /**
    * Set the description.
@@ -657,6 +717,18 @@ export class Command {
    * Get the description.
    */
   description(): string;
+
+  /**
+   * Set the summary. Used when listed as subcommand of parent.
+   *
+   * @returns `this` command for chaining
+   */
+
+  summary(str: string): this;
+  /**
+   * Get the summary.
+   */
+  summary(): string;
 
   /**
    * Set an alias for the command.
@@ -678,7 +750,7 @@ export class Command {
    *
    * @returns `this` command for chaining
    */
-  aliases(aliases: string[]): this;
+  aliases(aliases: readonly string[]): this;
   /**
    * Get aliases for the command.
    */
@@ -705,6 +777,39 @@ export class Command {
    * Get the name of the command.
    */
   name(): string;
+
+  /**
+   * Set the name of the command from script filename, such as process.argv[1],
+   * or require.main.filename, or __filename.
+   *
+   * (Used internally and public although not documented in README.)
+   *
+   * @example
+   * ```ts
+   * program.nameFromFilename(require.main.filename);
+   * ```
+   *
+   * @returns `this` command for chaining
+   */
+  nameFromFilename(filename: string): this;
+
+  /**
+   * Set the directory for searching for executable subcommands of this command.
+   *
+   * @example
+   * ```ts
+   * program.executableDir(__dirname);
+   * // or
+   * program.executableDir('subcommands');
+   * ```
+   *
+   * @returns `this` command for chaining
+   */
+  executableDir(path: string): this;
+  /**
+   * Get the executable search directory.
+   */
+  executableDir(): string;
 
   /**
    * Output help information for this command.
