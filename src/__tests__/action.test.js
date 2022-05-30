@@ -19,11 +19,9 @@ const PR_CONTEXT_PAYLOAD = {
 
 const PROJECT_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrgCard/mockRepoCard' },
-    event: {
-        project_card: {
-            content_url:
-                'https://github.com/mockOrgCard/mockRepoCard/issues/668'
-        }
+    project_card: {
+        content_url:
+            'https://github.com/mockOrgCard/mockRepoCard/issues/668'
     }
 };
 
