@@ -53,19 +53,14 @@ const runAction = async (
     let issue = context.issue?.number || context.pull_request?.number;
 
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
-    if (
-        !issue &&
-        context?.project_card?.content_url?.includes('issues')
-    ) {
-        const contentUrlParts =
-            context.project_card.content_url.split('/');
+    if (!issue && context?.project_card?.content_url?.includes('issues')) {
+        const contentUrlParts = context.project_card.content_url.split('/');
         issue = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
     }
 
     if (!issue) {
         throw new Error(`Couldn't find issue info in current context`);
     }
-
 
     const [owner, repo] = repository.full_name.split('/');
     // Check params
