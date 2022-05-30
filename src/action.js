@@ -30,6 +30,32 @@ const getTeamMembers = async (octokit, org, teamNames) => {
         .map((user) => user.login);
 };
 
+const removeAllAssignees = async (octokit, owner, repo, issue_number) => {
+    try {
+        const issue = await octokit.rest.issues.get({
+            owner,
+            repo,
+            issue_number
+        });
+        const assignees = issue.data.assignees.map(
+            (assignee) => assignee.login
+        );
+        console.log(
+            `Remove issue ${issue} assignees ${JSON.stringify(assignees)}`
+        );
+        await octokit.rest.issues.removeAssignees({
+            owner,
+            repo,
+            issue_number,
+            assignees
+        });
+    } catch (err) {
+        const newErr = new Error('Failed to remove previous assignees');
+        newErr.stack += `\nCaused by: ${err.stack}`;
+        throw newErr;
+    }
+};
+
 /**
  * Runs the auto-assign issue action
  * @param {any} octokit
@@ -108,18 +134,15 @@ const runAction = async (
         assignees = pickNRandomFromArray(assignees, numOfAssignee);
     }
 
+    // Remove previous assignees if needed
+    if (removePreviousAssignees) {
+        await removeAllAssignees(octokit, owner, repo, issue);
+    }
+
     // Assign issue
     console.log(
         `Assigning issue ${issue} to users ${JSON.stringify(assignees)}`
     );
-    // if before assigning the current ones should be removed, do it
-    if (removePreviousAssignees) {
-        await octokit.rest.issues.removeAssignees({
-            owner,
-            repo,
-            issue_number: issue
-        });
-    }
     await octokit.rest.issues.addAssignees({
         owner,
         repo,

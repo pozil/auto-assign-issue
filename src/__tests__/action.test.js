@@ -25,8 +25,13 @@ const PROJECT_CONTEXT_PAYLOAD = {
 };
 
 // Mock Octokit
-const assignUsersToIssueMock = jest.fn(() => Promise.resolve());
-const removeUsersFromIssueMock = jest.fn(() => Promise.resolve());
+const getIssueMock = jest.fn(() =>
+    Promise.resolve({
+        data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
+    })
+);
+const addIssueAssigneesMock = jest.fn(() => Promise.resolve());
+const removeIssueAssigneesMock = jest.fn(() => Promise.resolve());
 const listTeamMembersMock = jest.fn((params) =>
     Promise.resolve(TEAMS_MEMBERS[params.team_slug])
 );
@@ -34,8 +39,9 @@ const octokitMock = {
     rest: {
         teams: { listMembersInOrg: listTeamMembersMock },
         issues: {
-            addAssignees: assignUsersToIssueMock,
-            removeAssignees: removeUsersFromIssueMock
+            get: getIssueMock,
+            addAssignees: addIssueAssigneesMock,
+            removeAssignees: removeIssueAssigneesMock
         }
     }
 };
@@ -114,9 +120,9 @@ describe('action', () => {
             );
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
-            expect(removeUsersFromIssueMock).not.toHaveBeenCalled();
-            expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
-            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+            expect(removeIssueAssigneesMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
                 issue_number: 666,
                 owner: 'mockOrg',
@@ -134,8 +140,8 @@ describe('action', () => {
             );
 
             expect(listTeamMembersMock).toHaveBeenCalledTimes(2);
-            expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
-            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['userA1', 'userA2', 'userB1'],
                 issue_number: 666,
                 owner: 'mockOrg',
@@ -152,7 +158,7 @@ describe('action', () => {
                 null
             );
 
-            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2', 'userA2', 'userA1', 'userB1'],
                 issue_number: 666,
                 owner: 'mockOrg',
@@ -170,7 +176,7 @@ describe('action', () => {
             );
 
             expect(
-                assignUsersToIssueMock.mock.calls[0][0].assignees.length
+                addIssueAssigneesMock.mock.calls[0][0].assignees.length
             ).toBe(2);
         });
 
@@ -184,7 +190,7 @@ describe('action', () => {
             );
 
             expect(
-                assignUsersToIssueMock.mock.calls[0][0].assignees.length
+                addIssueAssigneesMock.mock.calls[0][0].assignees.length
             ).toBe(2);
         });
 
@@ -198,8 +204,8 @@ describe('action', () => {
             );
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
-            expect(assignUsersToIssueMock).toHaveBeenCalledTimes(1);
-            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
                 issue_number: 667,
                 owner: 'mockOrg',
@@ -216,8 +222,8 @@ describe('action', () => {
                 null
             );
 
-            expect(assignUsersToIssueMock).toHaveBeenCalled();
-            expect(assignUsersToIssueMock).toHaveBeenCalledWith({
+            expect(addIssueAssigneesMock).toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
                 issue_number: 668,
                 owner: 'mockOrgCard',
@@ -229,13 +235,19 @@ describe('action', () => {
             await runAction(
                 octokitMock,
                 CONTEXT_PAYLOAD,
-                'user1,user2,userA2',
+                'user1',
                 null,
                 null,
                 true
             );
 
-            expect(removeUsersFromIssueMock).toHaveBeenCalled();
+            expect(getIssueMock).toHaveBeenCalled();
+            expect(removeIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['userA', 'userB'],
+                issue_number: 666,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
         });
     });
 });
