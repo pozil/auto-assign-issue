@@ -47,7 +47,7 @@
         "eslint-plugin-jest": "^26.4.6",
         "husky": "^8.0.1",
         "jest": "^28.1.0",
-        "lint-staged": "^12.4.3",
+        "lint-staged": "^13.0.0",
         "prettier": "^2.6.2"
     },
     "engines": {
