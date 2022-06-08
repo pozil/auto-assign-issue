@@ -14,7 +14,8 @@ exports.NotFoundPackageJsonError = exports.MalformedPackageJsonError = void 0;
 class NotFoundPackageJsonError extends Error {
   constructor(rootDir) {
     super(`Could not find a "package.json" file in ${rootDir}`);
-    this.name = '';
+    this.name = ''; // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     Error.captureStackTrace(this, () => {});
   }
 }
@@ -27,7 +28,8 @@ class MalformedPackageJsonError extends Error {
       `There is malformed json in ${packageJsonPath}\n` +
         'Fix it, and then run "jest --init"'
     );
-    this.name = '';
+    this.name = ''; // eslint-disable-next-line @typescript-eslint/no-empty-function
+
     Error.captureStackTrace(this, () => {});
   }
 }

@@ -58,51 +58,60 @@ const removeAllAssignees = async (octokit, owner, repo, issue_number) => {
 
 /**
  * Runs the auto-assign issue action
- * @param {any} octokit
+ * @param {Object} octokit
  * @param {Object} context
- * @param {string} assigneesString
- * @param {string} teamsString
- * @param {string} numOfAssigneeString
- * @param {boolean} removePreviousAssignees
+ * @param {Object} parameters
+ * @param {string} parameters.assigneesString
+ * @param {string} parameters.teamsString
+ * @param {string} parameters.numOfAssigneeString
+ * @param {boolean} parameters.removePreviousAssignees
+ * @param {boolean} parameters.allowSelfAssign
  */
-const runAction = async (
-    octokit,
-    context,
-    assigneesString,
-    teamsString,
-    numOfAssigneeString,
-    removePreviousAssignees = false
-) => {
-    // Get repo and issue info from context
-    const { repository } = context;
+const runAction = async (octokit, context, parameters) => {
+    const {
+        assigneesString,
+        teamsString,
+        numOfAssigneeString,
+        removePreviousAssignees = false,
+        allowSelfAssign = true
+    } = parameters;
 
-    let issue = context.issue?.number || context.pull_request?.number;
-
+    // Get issue info from context
+    let issueNumber = context.issue?.number || context.pull_request?.number;
+    const author =
+        context.issue?.user.login || context.pull_request?.user.login;
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
-    if (!issue && context?.project_card?.content_url?.includes('issues')) {
+    if (
+        !issueNumber &&
+        context?.project_card?.content_url?.includes('issues')
+    ) {
         const contentUrlParts = context.project_card.content_url.split('/');
-        issue = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
+        issueNumber = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
     }
-
-    if (!issue) {
+    if (!issueNumber) {
+        console.error(JSON.stringify(context));
         throw new Error(`Couldn't find issue info in current context`);
     }
 
-    const [owner, repo] = repository.full_name.split('/');
-    // Check params
+    // Get org owner and repo name from context
+    const [owner, repo] = context.repository.full_name.split('/');
+
+    // Check assignees and teams parameters
     if (
         (!assigneesString || !assigneesString.trim()) &&
         (!teamsString || !teamsString.trim())
     ) {
         throw new Error(
-            'Missing required paramters: you must provide assignees or teams'
+            'Missing required parameters: you must provide assignees or teams'
         );
     }
     let numOfAssignee = 0;
     if (numOfAssigneeString) {
         numOfAssignee = parseInt(numOfAssigneeString, 10);
         if (isNaN(numOfAssignee)) {
-            throw new Error(`Invalid numOfAssignee`);
+            throw new Error(
+                `Invalid value ${numOfAssigneeString} for numOfAssignee`
+            );
         }
     }
 
@@ -129,6 +138,19 @@ const runAction = async (
     // Remove duplicates from assignees
     assignees = [...new Set(assignees)];
 
+    // Remove author if allowSelfAssign is disabled
+    if (!allowSelfAssign) {
+        const foundIndex = assignees.indexOf(author);
+        if (foundIndex !== -1) {
+            assignees.splice(foundIndex, 1);
+        }
+    }
+
+    // Check if there are assignees left
+    if (assignees.length === 0) {
+        throw new Error('No candidates left for assignement');
+    }
+
     // Select random assignees
     if (numOfAssignee) {
         assignees = pickNRandomFromArray(assignees, numOfAssignee);
@@ -136,17 +158,17 @@ const runAction = async (
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        await removeAllAssignees(octokit, owner, repo, issue);
+        await removeAllAssignees(octokit, owner, repo, issueNumber);
     }
 
     // Assign issue
     console.log(
-        `Assigning issue ${issue} to users ${JSON.stringify(assignees)}`
+        `Assigning issue ${issueNumber} to users ${JSON.stringify(assignees)}`
     );
     await octokit.rest.issues.addAssignees({
         owner,
         repo,
-        issue_number: issue,
+        issue_number: issueNumber,
         assignees
     });
 };

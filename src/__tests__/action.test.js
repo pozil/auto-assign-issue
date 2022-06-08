@@ -4,17 +4,23 @@ const {
     getTeamMembers
 } = require('../action.js');
 
-const TEAMS_MEMBERS = {
+const TEAM_MEMBERS = {
     teamA: { data: [{ login: 'userA1' }, { login: 'userA2' }] },
     teamB: { data: [{ login: 'userB1' }] }
 };
 const CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
-    issue: { number: 666 }
+    issue: {
+        number: 666,
+        user: { login: 'author' }
+    }
 };
 const PR_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
-    issue: { number: 667 }
+    issue: {
+        number: 667,
+        user: { login: 'author' }
+    }
 };
 
 const PROJECT_CONTEXT_PAYLOAD = {
@@ -33,7 +39,7 @@ const getIssueMock = jest.fn(() =>
 const addIssueAssigneesMock = jest.fn(() => Promise.resolve());
 const removeIssueAssigneesMock = jest.fn(() => Promise.resolve());
 const listTeamMembersMock = jest.fn((params) =>
-    Promise.resolve(TEAMS_MEMBERS[params.team_slug])
+    Promise.resolve(TEAM_MEMBERS[params.team_slug])
 );
 const octokitMock = {
     rest: {
@@ -93,31 +99,56 @@ describe('action', () => {
 
     describe('runAction', () => {
         it('fails when missing issue from context', async () => {
-            expect(runAction(null, {}, null, null, 1)).rejects.toThrow(
+            await expect(runAction(octokitMock, {}, {})).rejects.toThrow(
                 /find issue/
             );
         });
 
-        it('fails when missing both assigneesString and teams inputs', async () => {
-            expect(
-                runAction(null, CONTEXT_PAYLOAD, null, null, 1)
-            ).rejects.toThrow(/required paramters/);
+        it('fails when missing both assignees and teams inputs', async () => {
+            await expect(
+                runAction(octokitMock, CONTEXT_PAYLOAD, {})
+            ).rejects.toThrow(/required parameters/);
         });
 
-        it('fails when numOfAssigneeString input is not a number', async () => {
-            expect(
-                runAction(null, CONTEXT_PAYLOAD, 'someValue', null, 'invalid')
-            ).rejects.toThrow(/Invalid numOfAssignee/);
+        it('fails when numOfAssignee input is not a number', async () => {
+            await expect(
+                runAction(octokitMock, CONTEXT_PAYLOAD, {
+                    assigneesString: 'someValue',
+                    numOfAssigneeString: 'invalid'
+                })
+            ).rejects.toThrow(/invalid for numOfAssignee/);
+        });
+
+        it('fails when allowSelfAssign is false and it has not candidates', async () => {
+            await expect(
+                runAction(octokitMock, CONTEXT_PAYLOAD, {
+                    assigneesString: 'author',
+                    allowSelfAssign: false
+                })
+            ).rejects.toThrow(/No candidates left/);
+        });
+
+        it('works with self assigned', async () => {
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'author',
+                allowSelfAssign: true
+            });
+
+            expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(removeIssueAssigneesMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['author'],
+                issue_number: 666,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
         });
 
         it('works with asignees only, no random pick', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                'user1,user2',
-                null,
-                null
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'user1,user2'
+            });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(removeIssueAssigneesMock).not.toHaveBeenCalled();
@@ -131,13 +162,9 @@ describe('action', () => {
         });
 
         it('works with teams only, no random pick', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                null,
-                'teamA,teamB',
-                null
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                teamsString: 'teamA,teamB'
+            });
 
             expect(listTeamMembersMock).toHaveBeenCalledTimes(2);
             expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
@@ -150,13 +177,10 @@ describe('action', () => {
         });
 
         it('works with assignees and teams with duplicates, no random pick', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                'user1,user2,userA2',
-                'teamA,teamB',
-                null
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'user1,user2,userA2',
+                teamsString: 'teamA,teamB'
+            });
 
             expect(addIssueAssigneesMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2', 'userA2', 'userA1', 'userB1'],
@@ -167,13 +191,10 @@ describe('action', () => {
         });
 
         it('works with assignees, random pick', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                'user1,user2,userA2',
-                null,
-                2
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'user1,user2,userA2',
+                numOfAssigneeString: 2
+            });
 
             expect(
                 addIssueAssigneesMock.mock.calls[0][0].assignees.length
@@ -181,13 +202,10 @@ describe('action', () => {
         });
 
         it('works with teams, random pick', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                null,
-                'teamA,teamB',
-                2
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                teamsString: 'teamA,teamB',
+                numOfAssigneeString: 2
+            });
 
             expect(
                 addIssueAssigneesMock.mock.calls[0][0].assignees.length
@@ -195,13 +213,9 @@ describe('action', () => {
         });
 
         it('works with pull requests', async () => {
-            await runAction(
-                octokitMock,
-                PR_CONTEXT_PAYLOAD,
-                'user1,user2',
-                null,
-                null
-            );
+            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+                assigneesString: 'user1,user2'
+            });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
@@ -214,13 +228,9 @@ describe('action', () => {
         });
 
         it('works with project card events', async () => {
-            await runAction(
-                octokitMock,
-                PROJECT_CONTEXT_PAYLOAD,
-                'user1,user2',
-                null,
-                null
-            );
+            await runAction(octokitMock, PROJECT_CONTEXT_PAYLOAD, {
+                assigneesString: 'user1,user2'
+            });
 
             expect(addIssueAssigneesMock).toHaveBeenCalled();
             expect(addIssueAssigneesMock).toHaveBeenCalledWith({
@@ -232,14 +242,10 @@ describe('action', () => {
         });
 
         it('removes previous assignees', async () => {
-            await runAction(
-                octokitMock,
-                CONTEXT_PAYLOAD,
-                'user1',
-                null,
-                null,
-                true
-            );
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'user1',
+                removePreviousAssignees: true
+            });
 
             expect(getIssueMock).toHaveBeenCalled();
             expect(removeIssueAssigneesMock).toHaveBeenCalledWith({

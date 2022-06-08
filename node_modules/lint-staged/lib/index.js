@@ -49,6 +49,8 @@ const getMaxArgLength = () => {
  * @param {string} [options.configPath] - Path to configuration file
  * @param {Object} [options.cwd] - Current working directory
  * @param {boolean} [options.debug] - Enable debug mode
+ * @param {string} [options.diff] - Override the default "--staged" flag of "git diff" to get list of files
+ * @param {string} [options.diffFilter] - Override the default "--diff-filter=ACMR" flag of "git diff" to get list of files
  * @param {number} [options.maxArgLength] - Maximum argument string length
  * @param {boolean} [options.quiet] - Disable lint-staged’s own console output
  * @param {boolean} [options.relative] - Pass relative filepaths to tasks
@@ -67,6 +69,8 @@ const lintStaged = async (
     configPath,
     cwd,
     debug = false,
+    diff,
+    diffFilter,
     maxArgLength = getMaxArgLength() / 2,
     quiet = false,
     relative = false,
@@ -82,29 +86,30 @@ const lintStaged = async (
   debugLog('Unset GIT_LITERAL_PATHSPECS (was `%s`)', process.env.GIT_LITERAL_PATHSPECS)
   delete process.env.GIT_LITERAL_PATHSPECS
 
+  const options = {
+    allowEmpty,
+    concurrent,
+    configObject,
+    configPath,
+    cwd,
+    debug,
+    diff,
+    diffFilter,
+    maxArgLength,
+    quiet,
+    relative,
+    shell,
+    stash,
+    verbose,
+  }
+
   try {
-    const ctx = await runAll(
-      {
-        allowEmpty,
-        concurrent,
-        configObject,
-        configPath,
-        cwd,
-        debug,
-        maxArgLength,
-        quiet,
-        relative,
-        shell,
-        stash,
-        verbose,
-      },
-      logger
-    )
+    const ctx = await runAll(options, logger)
     debugLog('Tasks were executed successfully!')
     printTaskOutput(ctx, logger)
     return true
   } catch (runAllError) {
-    if (runAllError && runAllError.ctx && runAllError.ctx.errors) {
+    if (runAllError?.ctx?.errors) {
       const { ctx } = runAllError
 
       if (ctx.errors.has(ConfigNotFoundError)) {
