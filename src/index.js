@@ -14,6 +14,9 @@ try {
         'removePreviousAssignees',
         { required: false }
     );
+    const allowSelfAssign = core.getBooleanInput('allowSelfAssign', {
+        required: false
+    });
 
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);
@@ -22,14 +25,13 @@ try {
     const contextPayload = github.context.payload;
 
     // Run action
-    runAction(
-        octokit,
-        contextPayload,
+    runAction(octokit, contextPayload, {
         assigneesString,
         teamsString,
         numOfAssigneeString,
-        removePreviousAssignees
-    );
+        removePreviousAssignees,
+        allowSelfAssign
+    });
 } catch (error) {
     core.setFailed(error.message);
 }

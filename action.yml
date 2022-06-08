@@ -14,8 +14,13 @@ inputs:
         description: 'Number of random assignee'
         required: false
     removePreviousAssignees:
-        description: 'Flag to remove assignees before assign them (useful the issue want to be reasigned due to some changes).'
+        description: 'Flag that removes assignees before assigning them (useful the issue is reasigned).'
         required: false
+        default: false
+    allowSelfAssign:
+        description: 'Flag that allows self-assignment to the issue author.'
+        required: false
+        default: true
 
 runs:
     using: 'node16'
