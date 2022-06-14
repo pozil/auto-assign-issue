@@ -56,6 +56,32 @@ const removeAllAssignees = async (octokit, owner, repo, issue_number) => {
     }
 };
 
+const removeAllReviewers = async (octokit, owner, repo, issue_number) => {
+    try {
+        const issue = await octokit.rest.pulls.get({
+            owner,
+            repo,
+            issue_number
+        });
+        const requested_reviewers = issue.data.requested_reviewers.map(
+            (requested_reviewers) => requested_reviewers.login
+        );
+        console.log(
+            `Remove PR ${issue} assignees ${JSON.stringify(requested_reviewers)}`
+        );
+        await rest.pulls.removeRequestedReviewers({
+            owner,
+            repo,
+            issue_number,
+            requested_reviewers
+        });
+    } catch (err) {
+        const newErr = new Error('Failed to remove previous reviewers');
+        newErr.stack += `\nCaused by: ${err.stack}`;
+        throw newErr;
+    }
+};
+
 /**
  * Runs the auto-assign issue action
  * @param {Object} octokit
@@ -158,19 +184,36 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        await removeAllAssignees(octokit, owner, repo, issueNumber);
+        if (context.issue) {
+            await removeAllAssignees(octokit, owner, repo, issueNumber);
+        } else {
+            removeAllReviewers(octokit, owner, repo, issueNumber);
+        }
     }
 
-    // Assign issue
-    console.log(
-        `Assigning issue ${issueNumber} to users ${JSON.stringify(assignees)}`
-    );
-    await octokit.rest.issues.addAssignees({
-        owner,
-        repo,
-        issue_number: issueNumber,
-        assignees
-    });
+    if (context.issue) {
+        // Assign issue
+        console.log(
+            `Assigning issue ${issueNumber} to users ${JSON.stringify(assignees)}`
+        );
+        await octokit.rest.issues.addAssignees({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            assignees
+        });
+    } else {
+        // Assign issue
+        console.log(
+            `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
+        );
+        await octokit.rest.pulls.requestReviewers({
+            owner,
+            repo,
+            pull_number: issueNumber,
+            assignees
+        });
+    }
 };
 
 module.exports = {

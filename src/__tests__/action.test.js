@@ -17,7 +17,7 @@ const CONTEXT_PAYLOAD = {
 };
 const PR_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
-    issue: {
+    pull_request: {
         number: 667,
         user: { login: 'author' }
     }
