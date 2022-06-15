@@ -1,3 +1,4 @@
+const { getOctokit } = require('@actions/github');
 const pickNRandomFromArray = (arr, n) => {
     if (arr.length === 0) {
         throw new Error('Can not pick random from empty list.');
@@ -56,6 +57,25 @@ const removeAllAssignees = async (octokit, owner, repo, issue_number) => {
     }
 };
 
+const isAnIssue = async (octokit, owner, repo, issue_number) => {
+    let isAnIssue = false;
+
+    try {
+        const issue = await octokit.rest.issues.get({
+            owner,
+            repo,
+            issue_number
+        });
+        if (issue?.data) {
+            isAnIssue = true;
+        }
+    } catch (err) {
+        // It's the only way to identify if it's an issue, trying to retrieve its data
+    }
+
+    return isAnIssue;
+};
+
 const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
     try {
         const issue = await octokit.rest.pulls.get({
@@ -106,8 +126,13 @@ const runAction = async (octokit, context, parameters) => {
 
     // Get issue info from context
     let issueNumber = context.issue?.number || context.pull_request?.number;
+    let isPR = context.pull_request ? true : false;
     const author =
         context.issue?.user.login || context.pull_request?.user.login;
+
+    // Get org owner and repo name from context
+    const [owner, repo] = context.repository.full_name.split('/');
+
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
         !issueNumber &&
@@ -115,14 +140,12 @@ const runAction = async (octokit, context, parameters) => {
     ) {
         const contentUrlParts = context.project_card.content_url.split('/');
         issueNumber = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
+        isPR = await isAnIssue(octokit, owner, repo, issueNumber);
     }
     if (!issueNumber) {
         console.error(JSON.stringify(context));
         throw new Error(`Couldn't find issue info in current context`);
     }
-
-    // Get org owner and repo name from context
-    const [owner, repo] = context.repository.full_name.split('/');
 
     // Check assignees and teams parameters
     if (
@@ -186,14 +209,14 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        if (context.issue) {
+        if (!isPR) {
             await removeAllAssignees(octokit, owner, repo, issueNumber);
         } else {
             await removeAllReviewers(octokit, owner, repo, issueNumber);
         }
     }
 
-    if (context.issue) {
+    if (!isPR) {
         // Assign issue
         console.log(
             `Assigning issue ${issueNumber} to users ${JSON.stringify(
