@@ -36,8 +36,18 @@ const getIssueMock = jest.fn(() =>
         data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
     })
 );
+const getPRMock = jest.fn(() =>
+    Promise.resolve({
+        data: {
+            assignees: [{ login: 'userA' }, { login: 'userB' }],
+            requested_reviewers: [{ login: 'userA' }, { login: 'userB' }]
+        }
+    })
+);
 const addIssueAssigneesMock = jest.fn(() => Promise.resolve());
 const removeIssueAssigneesMock = jest.fn(() => Promise.resolve());
+const addPRReviewersMock = jest.fn(() => Promise.resolve());
+const removePRReviewersMock = jest.fn(() => Promise.resolve());
 const listTeamMembersMock = jest.fn((params) =>
     Promise.resolve(TEAM_MEMBERS[params.team_slug])
 );
@@ -48,6 +58,11 @@ const octokitMock = {
             get: getIssueMock,
             addAssignees: addIssueAssigneesMock,
             removeAssignees: removeIssueAssigneesMock
+        },
+        pulls: {
+            get: getPRMock,
+            requestReviewers: addPRReviewersMock,
+            removeRequestedReviewers: removePRReviewersMock
         }
     }
 };
@@ -218,10 +233,10 @@ describe('action', () => {
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
-            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
-            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+            expect(addPRReviewersMock).toHaveBeenCalledTimes(1);
+            expect(addPRReviewersMock).toHaveBeenCalledWith({
                 assignees: ['user1', 'user2'],
-                issue_number: 667,
+                pull_request: 667,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
             });
@@ -253,6 +268,20 @@ describe('action', () => {
                 issue_number: 666,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
+            });
+        });
+
+        it('removes previous reviewers', async () => {
+            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+                assigneesString: 'user1',
+                removePreviousAssignees: true
+            });
+
+            expect(getPRMock).toHaveBeenCalled();
+            expect(removePRReviewersMock).toHaveBeenCalledWith({
+                owner: 'mockOrg',
+                repo: 'mockRepo',
+                pull_number: 667
             });
         });
     });
