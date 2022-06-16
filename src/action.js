@@ -72,7 +72,6 @@ const isAnIssue = async (octokit, owner, repo, issue_number) => {
     } catch (err) {
         // It's the only way to identify if it's an issue, trying to retrieve its data
     }
-
     return isAnIssue;
 };
 
@@ -126,12 +125,9 @@ const runAction = async (octokit, context, parameters) => {
 
     // Get issue info from context
     let issueNumber = context.issue?.number || context.pull_request?.number;
-    let isPR = context.pull_request ? true : false;
+    let isIssue = context.issue ? true : false;
     const author =
         context.issue?.user.login || context.pull_request?.user.login;
-
-    // Get org owner and repo name from context
-    const [owner, repo] = context.repository.full_name.split('/');
 
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
@@ -140,11 +136,18 @@ const runAction = async (octokit, context, parameters) => {
     ) {
         const contentUrlParts = context.project_card.content_url.split('/');
         issueNumber = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
-        isPR = await isAnIssue(octokit, owner, repo, issueNumber);
     }
     if (!issueNumber) {
-        console.error(JSON.stringify(context));
         throw new Error(`Couldn't find issue info in current context`);
+    }
+
+    // Get org owner and repo name from context
+    const [owner, repo] = context.repository.full_name.split('/');
+
+    // if this flag is false is because the context object didn't bring the issue one
+    // But can be an issue coming from a card, that's why we need to check it asking the API
+    if (!isIssue) {
+        isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
     }
 
     // Check assignees and teams parameters
@@ -209,14 +212,14 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        if (!isPR) {
+        if (isIssue) {
             await removeAllAssignees(octokit, owner, repo, issueNumber);
         } else {
             await removeAllReviewers(octokit, owner, repo, issueNumber);
         }
     }
 
-    if (!isPR) {
+    if (isIssue) {
         // Assign issue
         console.log(
             `Assigning issue ${issueNumber} to users ${JSON.stringify(

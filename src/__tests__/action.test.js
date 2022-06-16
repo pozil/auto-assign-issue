@@ -36,6 +36,11 @@ const getIssueMock = jest.fn(() =>
         data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
     })
 );
+const getNonExistIssueMock = jest.fn(() =>
+    Promise.reject({
+        data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
+    })
+);
 const getPRMock = jest.fn(() =>
     Promise.resolve({
         data: {
@@ -58,6 +63,15 @@ const octokitMock = {
             get: getIssueMock,
             addAssignees: addIssueAssigneesMock,
             removeAssignees: removeIssueAssigneesMock
+        }
+    }
+};
+
+const octokitMockForPRs = {
+    rest: {
+        teams: { listMembersInOrg: listTeamMembersMock },
+        issues: {
+            get: getNonExistIssueMock
         },
         pulls: {
             get: getPRMock,
@@ -228,21 +242,21 @@ describe('action', () => {
         });
 
         it('works with pull requests', async () => {
-            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+            await runAction(octokitMockForPRs, PR_CONTEXT_PAYLOAD, {
                 assigneesString: 'user1,user2'
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(addPRReviewersMock).toHaveBeenCalledTimes(1);
             expect(addPRReviewersMock).toHaveBeenCalledWith({
-                assignees: ['user1', 'user2'],
-                pull_request: 667,
+                requested_reviewers: ['user1', 'user2'],
+                pull_number: 667,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
             });
         });
 
-        it('works with project card events', async () => {
+        it('works with project card events (for issues)', async () => {
             await runAction(octokitMock, PROJECT_CONTEXT_PAYLOAD, {
                 assigneesString: 'user1,user2'
             });
@@ -272,7 +286,7 @@ describe('action', () => {
         });
 
         it('removes previous reviewers', async () => {
-            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+            await runAction(octokitMockForPRs, PR_CONTEXT_PAYLOAD, {
                 assigneesString: 'user1',
                 removePreviousAssignees: true
             });
@@ -281,7 +295,8 @@ describe('action', () => {
             expect(removePRReviewersMock).toHaveBeenCalledWith({
                 owner: 'mockOrg',
                 repo: 'mockRepo',
-                pull_number: 667
+                pull_number: 667,
+                reviewers: ['userA', 'userB']
             });
         });
     });
