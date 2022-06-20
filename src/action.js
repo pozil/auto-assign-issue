@@ -56,6 +56,52 @@ const removeAllAssignees = async (octokit, owner, repo, issue_number) => {
     }
 };
 
+const isAnIssue = async (octokit, owner, repo, issue_number) => {
+    let isAnIssue = false;
+
+    try {
+        const issue = await octokit.rest.issues.get({
+            owner,
+            repo,
+            issue_number
+        });
+        if (issue?.data) {
+            isAnIssue = true;
+        }
+    } catch (err) {
+        // It's the only way to identify if it's an issue, trying to retrieve its data
+    }
+    return isAnIssue;
+};
+
+const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
+    try {
+        const issue = await octokit.rest.pulls.get({
+            owner,
+            repo,
+            pull_number
+        });
+        const requested_reviewers = issue.data.requested_reviewers.map(
+            (requested_reviewers) => requested_reviewers.login
+        );
+        console.log(
+            `Remove PR ${issue} assignees ${JSON.stringify(
+                requested_reviewers
+            )}`
+        );
+        await octokit.rest.pulls.removeRequestedReviewers({
+            owner,
+            repo,
+            pull_number,
+            reviewers: requested_reviewers
+        });
+    } catch (err) {
+        const newErr = new Error('Failed to remove previous reviewers');
+        newErr.stack += `\nCaused by: ${err.stack}`;
+        throw newErr;
+    }
+};
+
 /**
  * Runs the auto-assign issue action
  * @param {Object} octokit
@@ -78,8 +124,10 @@ const runAction = async (octokit, context, parameters) => {
 
     // Get issue info from context
     let issueNumber = context.issue?.number || context.pull_request?.number;
+    let isIssue = context.issue ? true : false;
     const author =
         context.issue?.user.login || context.pull_request?.user.login;
+
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
         !issueNumber &&
@@ -89,12 +137,17 @@ const runAction = async (octokit, context, parameters) => {
         issueNumber = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
     }
     if (!issueNumber) {
-        console.error(JSON.stringify(context));
         throw new Error(`Couldn't find issue info in current context`);
     }
 
     // Get org owner and repo name from context
     const [owner, repo] = context.repository.full_name.split('/');
+
+    // if this flag is false is because the context object didn't bring the issue one
+    // But can be an issue coming from a card, that's why we need to check it asking the API
+    if (!isIssue) {
+        isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
+    }
 
     // Check assignees and teams parameters
     if (
@@ -158,19 +211,38 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        await removeAllAssignees(octokit, owner, repo, issueNumber);
+        if (isIssue) {
+            await removeAllAssignees(octokit, owner, repo, issueNumber);
+        } else {
+            await removeAllReviewers(octokit, owner, repo, issueNumber);
+        }
     }
 
-    // Assign issue
-    console.log(
-        `Assigning issue ${issueNumber} to users ${JSON.stringify(assignees)}`
-    );
-    await octokit.rest.issues.addAssignees({
-        owner,
-        repo,
-        issue_number: issueNumber,
-        assignees
-    });
+    if (isIssue) {
+        // Assign issue
+        console.log(
+            `Assigning issue ${issueNumber} to users ${JSON.stringify(
+                assignees
+            )}`
+        );
+        await octokit.rest.issues.addAssignees({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            assignees
+        });
+    } else {
+        // Assign PR
+        console.log(
+            `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
+        );
+        await octokit.rest.pulls.requestReviewers({
+            owner,
+            repo,
+            pull_number: issueNumber,
+            requested_reviewers: assignees
+        });
+    }
 };
 
 module.exports = {
