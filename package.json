@@ -1,13 +1,13 @@
 {
     "name": "auto-assign-issue",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
     "scripts": {
         "lint": "eslint src/**",
         "prettier": "prettier --write \"**/*.{html,js,json,md,yaml,yml}\"",
-        "prettier:verify": "prettier --list-different \"**/*.{html,js,json,md,yaml,yml}\"",
+        "prettier:verify": "prettier --check \"**/*.{html,js,json,md,yaml,yml}\"",
         "test": "jest",
         "test:coverage": "jest --coverage",
         "postinstall": "husky install",
@@ -17,7 +17,7 @@
         "!(node_modules/**/*)*.{html,js,json,md,yaml,yml}": [
             "prettier --write"
         ],
-        "/src/**/*.js": [
+        "./src/**/*.js": [
             "eslint",
             "jest --bail --findRelatedTests"
         ]
@@ -39,16 +39,16 @@
     },
     "homepage": "https://github.com/pozil/auto-assign-issue#readme",
     "dependencies": {
-        "@actions/core": "^1.8.2",
+        "@actions/core": "^1.9.0",
         "@actions/github": "^5.0.3"
     },
     "devDependencies": {
-        "eslint": "^8.17.0",
+        "eslint": "^8.18.0",
         "eslint-plugin-jest": "^26.5.3",
         "husky": "^8.0.1",
         "jest": "^28.1.1",
-        "lint-staged": "^13.0.0",
-        "prettier": "^2.6.2"
+        "lint-staged": "^13.0.2",
+        "prettier": "^2.7.1"
     },
     "engines": {
         "node": ">=16"
