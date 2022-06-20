@@ -1,4 +1,3 @@
-const { getOctokit } = require('@actions/github');
 const pickNRandomFromArray = (arr, n) => {
     if (arr.length === 0) {
         throw new Error('Can not pick random from empty list.');
@@ -233,7 +232,7 @@ const runAction = async (octokit, context, parameters) => {
             assignees
         });
     } else {
-        // Assign issue
+        // Assign PR
         console.log(
             `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
         );

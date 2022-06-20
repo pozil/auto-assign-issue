@@ -15,5 +15,3 @@ $RECYCLE.BIN/
 
 # Code coverage reports
 /coverage
-
-node_modules
