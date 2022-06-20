@@ -191,8 +191,8 @@ const runAction = async (octokit, context, parameters) => {
     // Remove duplicates from assignees
     assignees = [...new Set(assignees)];
 
-    // Remove author if allowSelfAssign is disabled
-    if (!allowSelfAssign) {
+    // Remove author if allowSelfAssign is disabled OR if it's a PR (where it's not allowed).
+    if (!allowSelfAssign || !isIssue) {
         const foundIndex = assignees.indexOf(author);
         if (foundIndex !== -1) {
             assignees.splice(foundIndex, 1);
@@ -236,11 +236,12 @@ const runAction = async (octokit, context, parameters) => {
         console.log(
             `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
         );
+
         await octokit.rest.pulls.requestReviewers({
             owner,
             repo,
             pull_number: issueNumber,
-            requested_reviewers: assignees
+            reviewers: assignees
         });
     }
 };
