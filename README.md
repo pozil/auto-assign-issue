@@ -10,7 +10,7 @@
 | `teams`                   | String  | only if `assignees` is not specified | Comma separated list of teams. Issue will be assigned to the team members.<br/><br/>**Important Requirement:** if using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough). |
 | `numOfAssignee`           | Number  | false                                | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users.                                                                                                                                             |
 | `removePreviousAssignees` | Boolean | false                                | Flag that removes assignees before assigning them (useful the issue is reasigned). False by default.                                                                                                                                                           |
-| `allowSelfAssign`         | Boolean | false                                | Flag that allows self-assignment to the issue author. True by default.                                                                                                                                                                                         |
+| `allowSelfAssign`         | Boolean | false                                | Flag that allows self-assignment to the issue author. True by default.<br/><br/>This flag is ignored when working with PRs as self assigning a PR for review is forbidden by GitHub.                                                                           |
 
 ## Examples
 
