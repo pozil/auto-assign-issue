@@ -249,7 +249,7 @@ describe('action', () => {
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(addPRReviewersMock).toHaveBeenCalledTimes(1);
             expect(addPRReviewersMock).toHaveBeenCalledWith({
-                requested_reviewers: ['user1', 'user2'],
+                reviewers: ['user1', 'user2'],
                 pull_number: 667,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
