@@ -17,6 +17,10 @@ inputs:
         description: 'Flag that removes assignees before assigning them (useful the issue is reasigned).'
         required: false
         default: false
+    allowNoAssignees:
+        description: 'Flag that prevents the action from failing when there are no assignees.'
+        required: false
+        default: false
     allowSelfAssign:
         description: 'Flag that allows self-assignment to the issue author.'
         required: false
