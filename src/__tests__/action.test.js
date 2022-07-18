@@ -148,13 +148,30 @@ describe('action', () => {
             ).rejects.toThrow(/invalid for numOfAssignee/);
         });
 
-        it('fails when allowSelfAssign is false and it has not candidates', async () => {
+        it('fails when allowSelfAssign is false and there are no candidates', async () => {
             await expect(
                 runAction(octokitMock, CONTEXT_PAYLOAD, {
                     assigneesString: 'author',
                     allowSelfAssign: false
                 })
-            ).rejects.toThrow(/No candidates left/);
+            ).rejects.toThrow(/No candidates found/);
+        });
+
+        it('works when allowNoAssignees is true and there are no candidates', async () => {
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'author',
+                allowNoAssignees: true
+            });
+
+            expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(removeIssueAssigneesMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['author'],
+                issue_number: 666,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
         });
 
         it('works with self assigned', async () => {

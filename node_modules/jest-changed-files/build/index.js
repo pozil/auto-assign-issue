@@ -5,10 +5,10 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.getChangedFilesForRoots = exports.findRepos = void 0;
 
-function _throat() {
-  const data = _interopRequireDefault(require('throat'));
+function _pLimit() {
+  const data = _interopRequireDefault(require('p-limit'));
 
-  _throat = function () {
+  _pLimit = function () {
     return data;
   };
 
@@ -35,7 +35,7 @@ function notEmpty(value) {
 } // This is an arbitrary number. The main goal is to prevent projects with
 // many roots (50+) from spawning too many processes at once.
 
-const mutex = (0, _throat().default)(5);
+const mutex = (0, _pLimit().default)(5);
 
 const findGitRoot = dir => mutex(() => _git.default.getRoot(dir));
 

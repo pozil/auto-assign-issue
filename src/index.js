@@ -14,6 +14,9 @@ try {
         'removePreviousAssignees',
         { required: false }
     );
+    const allowNoAssignees = core.getBooleanInput('allowNoAssignees', {
+        required: false
+    });
     const allowSelfAssign = core.getBooleanInput('allowSelfAssign', {
         required: false
     });
@@ -30,6 +33,7 @@ try {
         teamsString,
         numOfAssigneeString,
         removePreviousAssignees,
+        allowNoAssignees,
         allowSelfAssign
     });
 } catch (error) {

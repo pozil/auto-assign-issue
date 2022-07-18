@@ -113,6 +113,7 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
  * @param {string} parameters.teamsString
  * @param {string} parameters.numOfAssigneeString
  * @param {boolean} parameters.removePreviousAssignees
+ * @param {boolean} parameters.allowNoAssignees
  * @param {boolean} parameters.allowSelfAssign
  */
 const runAction = async (octokit, context, parameters) => {
@@ -121,6 +122,7 @@ const runAction = async (octokit, context, parameters) => {
         teamsString,
         numOfAssigneeString,
         removePreviousAssignees = false,
+        allowNoAssignees = false,
         allowSelfAssign = true
     } = parameters;
 
@@ -145,7 +147,7 @@ const runAction = async (octokit, context, parameters) => {
     // Get org owner and repo name from context
     const [owner, repo] = context.repository.full_name.split('/');
 
-    // if this flag is false is because the context object didn't bring the issue one
+    // If this flag is false is because the context object didn't bring the issue one
     // But can be an issue coming from a card, that's why we need to check it asking the API
     if (!isIssue) {
         isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
@@ -167,6 +169,15 @@ const runAction = async (octokit, context, parameters) => {
             throw new Error(
                 `Invalid value ${numOfAssigneeString} for numOfAssignee`
             );
+        }
+    }
+
+    // Remove previous assignees if needed
+    if (removePreviousAssignees) {
+        if (isIssue) {
+            await removeAllAssignees(octokit, owner, repo, issueNumber);
+        } else {
+            await removeAllReviewers(octokit, owner, repo, issueNumber);
         }
     }
 
@@ -202,49 +213,42 @@ const runAction = async (octokit, context, parameters) => {
     }
 
     // Check if there are assignees left
-    if (assignees.length === 0) {
-        throw new Error('No candidates left for assignement');
-    }
-
-    // Select random assignees
-    if (numOfAssignee) {
-        assignees = pickNRandomFromArray(assignees, numOfAssignee);
-    }
-
-    // Remove previous assignees if needed
-    if (removePreviousAssignees) {
-        if (isIssue) {
-            await removeAllAssignees(octokit, owner, repo, issueNumber);
-        } else {
-            await removeAllReviewers(octokit, owner, repo, issueNumber);
+    if (assignees.length > 0) {
+        // Select random assignees
+        if (numOfAssignee) {
+            assignees = pickNRandomFromArray(assignees, numOfAssignee);
         }
-    }
 
-    if (isIssue) {
-        // Assign issue
-        console.log(
-            `Assigning issue ${issueNumber} to users ${JSON.stringify(
+        if (isIssue) {
+            // Assign issue
+            console.log(
+                `Assigning issue ${issueNumber} to users ${JSON.stringify(
+                    assignees
+                )}`
+            );
+            await octokit.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: issueNumber,
                 assignees
-            )}`
-        );
-        await octokit.rest.issues.addAssignees({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            assignees
-        });
-    } else {
-        // Assign PR
-        console.log(
-            `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
-        );
+            });
+        } else {
+            // Assign PR
+            console.log(
+                `Assigning PR ${issueNumber} to users ${JSON.stringify(
+                    assignees
+                )}`
+            );
 
-        await octokit.rest.pulls.requestReviewers({
-            owner,
-            repo,
-            pull_number: issueNumber,
-            reviewers: assignees
-        });
+            await octokit.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: issueNumber,
+                reviewers: assignees
+            });
+        }
+    } else if (!allowNoAssignees) {
+        throw new Error('No candidates found for assignement');
     }
 };
 
