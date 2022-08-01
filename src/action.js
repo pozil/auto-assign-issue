@@ -87,7 +87,7 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
             (requested_reviewers) => requested_reviewers.login
         );
         console.log(
-            `Remove PR ${issue} reviwe ${JSON.stringify(
+            `Remove PR ${issue} reviewers ${JSON.stringify(
                 requested_reviewers
             )}`
         );
