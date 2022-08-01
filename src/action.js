@@ -86,9 +86,6 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
         const requested_reviewers = issue.data.requested_reviewers.map(
             (requested_reviewers) => requested_reviewers.login
         );
-        const assignees = issue.data.assignees.map(
-            (assignees) => assignees.login
-        );
         console.log(
             `Remove PR ${issue} reviwe ${JSON.stringify(
                 requested_reviewers
