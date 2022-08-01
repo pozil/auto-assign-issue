@@ -76,7 +76,7 @@ const isAnIssue = async (octokit, owner, repo, issue_number) => {
     return isAnIssue;
 };
 
-const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
+const removeAllReviewersAndAssignees = async (octokit, owner, repo, pull_number) => {
     try {
         const issue = await octokit.rest.pulls.get({
             owner,
@@ -86,8 +86,11 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
         const requested_reviewers = issue.data.requested_reviewers.map(
             (requested_reviewers) => requested_reviewers.login
         );
+        const assignees = issue.data.assignees.map(
+            (assignees) => assignees.login
+        );
         console.log(
-            `Remove PR ${issue} assignees ${JSON.stringify(
+            `Remove PR ${issue} reviwe ${JSON.stringify(
                 requested_reviewers
             )}`
         );
@@ -174,9 +177,9 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        if (isIssue) {
-            await removeAllAssignees(octokit, owner, repo, issueNumber);
-        } else {
+        await removeAllAssignees(octokit, owner, repo, issueNumber);
+        // If it's a PR, then remove reviewers too
+        if (!isIssue) {
             await removeAllReviewers(octokit, owner, repo, issueNumber);
         }
     }
@@ -219,21 +222,20 @@ const runAction = async (octokit, context, parameters) => {
             assignees = pickNRandomFromArray(assignees, numOfAssignee);
         }
 
-        if (isIssue) {
-            // Assign issue
-            console.log(
-                `Assigning issue ${issueNumber} to users ${JSON.stringify(
-                    assignees
-                )}`
-            );
-            await octokit.rest.issues.addAssignees({
-                owner,
-                repo,
-                issue_number: issueNumber,
+        // Assign issue
+        console.log(
+            `Assigning issue ${issueNumber} to users ${JSON.stringify(
                 assignees
-            });
-        } else {
-            // Assign PR
+            )}`
+        );
+        await octokit.rest.issues.addAssignees({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            assignees
+        });
+        if (!isIssue) {
+            // Assign PR reviewers
             console.log(
                 `Assigning PR ${issueNumber} to users ${JSON.stringify(
                     assignees
