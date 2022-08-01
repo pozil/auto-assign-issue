@@ -76,7 +76,7 @@ const isAnIssue = async (octokit, owner, repo, issue_number) => {
     return isAnIssue;
 };
 
-const removeAllReviewersAndAssignees = async (octokit, owner, repo, pull_number) => {
+const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
     try {
         const issue = await octokit.rest.pulls.get({
             owner,
