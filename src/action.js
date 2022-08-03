@@ -87,7 +87,7 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
             (requested_reviewers) => requested_reviewers.login
         );
         console.log(
-            `Remove PR ${issue} assignees ${JSON.stringify(
+            `Remove PR ${issue} reviewers ${JSON.stringify(
                 requested_reviewers
             )}`
         );
@@ -174,9 +174,9 @@ const runAction = async (octokit, context, parameters) => {
 
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
-        if (isIssue) {
-            await removeAllAssignees(octokit, owner, repo, issueNumber);
-        } else {
+        await removeAllAssignees(octokit, owner, repo, issueNumber);
+        // If it's a PR, then remove reviewers too
+        if (!isIssue) {
             await removeAllReviewers(octokit, owner, repo, issueNumber);
         }
     }
@@ -219,21 +219,20 @@ const runAction = async (octokit, context, parameters) => {
             assignees = pickNRandomFromArray(assignees, numOfAssignee);
         }
 
-        if (isIssue) {
-            // Assign issue
-            console.log(
-                `Assigning issue ${issueNumber} to users ${JSON.stringify(
-                    assignees
-                )}`
-            );
-            await octokit.rest.issues.addAssignees({
-                owner,
-                repo,
-                issue_number: issueNumber,
+        // Assign issue
+        console.log(
+            `Assigning issue ${issueNumber} to users ${JSON.stringify(
                 assignees
-            });
-        } else {
-            // Assign PR
+            )}`
+        );
+        await octokit.rest.issues.addAssignees({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            assignees
+        });
+        if (!isIssue) {
+            // Assign PR reviewers
             console.log(
                 `Assigning PR ${issueNumber} to users ${JSON.stringify(
                     assignees
