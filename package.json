@@ -1,6 +1,6 @@
 {
     "name": "auto-assign-issue",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
     "main": "src/index.js",
@@ -48,8 +48,7 @@
         "husky": "^8.0.1",
         "jest": "^28.1.3",
         "lint-staged": "^13.0.3",
-        "prettier": "^2.7.1",
-        "typescript": "^4.7.4"
+        "prettier": "^2.7.1"
     },
     "engines": {
         "node": ">=16"
