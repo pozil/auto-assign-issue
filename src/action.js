@@ -209,8 +209,8 @@ const runAction = async (octokit, context, parameters) => {
     // Remove duplicates from assignees
     assignees = [...new Set(assignees)];
 
-    // Remove author if allowSelfAssign is disabled OR if it's a PR (where it's not allowed).
-    if (!allowSelfAssign || !isIssue) {
+    // Remove author if allowSelfAssign is disabled
+    if (!allowSelfAssign) {
         const foundIndex = assignees.indexOf(author);
         if (foundIndex !== -1) {
             assignees.splice(foundIndex, 1);
