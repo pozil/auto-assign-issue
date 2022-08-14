@@ -336,5 +336,36 @@ describe('action', () => {
                 assignees: ['userA', 'userB']
             });
         });
+
+        it('assigns author to pull request assignee', async () => {
+            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+                assigneesString: 'author,user1,user2',
+                allowSelfAssign: true
+            });
+
+            expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['author', 'user1', 'user2'],
+                issue_number: 667,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
+
+        it('does not assigns author to pull request reviewer', async () => {
+            await runAction(octokitMockForPRs, PR_CONTEXT_PAYLOAD, {
+                assigneesString: 'author,user1,user2',
+                allowSelfAssign: true
+            });
+
+            expect(addPRReviewersMock).toHaveBeenCalledTimes(1);
+            expect(addPRReviewersMock).toHaveBeenCalledWith({
+                reviewers: ['user1', 'user2'],
+                pull_number: 667,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
     });
 });
