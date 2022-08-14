@@ -198,7 +198,7 @@ describe('action', () => {
             });
         });
 
-        it('works with asignees only, no random pick', async () => {
+        it('works with assignees only, no random pick', async () => {
             await runAction(octokitMock, CONTEXT_PAYLOAD, {
                 assigneesString: 'user1,user2'
             });
