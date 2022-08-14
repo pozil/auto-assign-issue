@@ -22,6 +22,17 @@ const PR_CONTEXT_PAYLOAD = {
         user: { login: 'author' }
     }
 };
+const WORKFLOW_RUN_CONTEXT_PAYLOAD = {
+    repository: { full_name: 'mockOrg/mockRepo' },
+    workflow_run: {
+        pull_requests: [
+            {
+                number: 667
+            }
+        ],
+        actor: { login: 'author' }
+    }
+};
 
 const PROJECT_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrgCard/mockRepoCard' },
@@ -355,6 +366,37 @@ describe('action', () => {
 
         it('does not assigns author to pull request reviewer', async () => {
             await runAction(octokitMockForPRs, PR_CONTEXT_PAYLOAD, {
+                assigneesString: 'author,user1,user2',
+                allowSelfAssign: true
+            });
+
+            expect(addPRReviewersMock).toHaveBeenCalledTimes(1);
+            expect(addPRReviewersMock).toHaveBeenCalledWith({
+                reviewers: ['user1', 'user2'],
+                pull_number: 667,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
+
+        it('assigns author to pull request assignee from workflow_run', async () => {
+            await runAction(octokitMock, WORKFLOW_RUN_CONTEXT_PAYLOAD, {
+                assigneesString: 'author,user1,user2',
+                allowSelfAssign: true
+            });
+
+            expect(listTeamMembersMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['author', 'user1', 'user2'],
+                issue_number: 667,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
+
+        it('does not assigns author to pull request reviewer from workflow_run', async () => {
+            await runAction(octokitMockForPRs, WORKFLOW_RUN_CONTEXT_PAYLOAD, {
                 assigneesString: 'author,user1,user2',
                 allowSelfAssign: true
             });
