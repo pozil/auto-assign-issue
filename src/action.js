@@ -242,16 +242,20 @@ const runAction = async (octokit, context, parameters) => {
 
     // Assign PR reviewers
     if (!isIssue) {
-        console.log(
-            `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
-        );
+        if (assignees.length > 0) {
+            console.log(
+                `Assigning PR ${issueNumber} to users ${JSON.stringify(
+                    assignees
+                )}`
+            );
 
-        await octokit.rest.pulls.requestReviewers({
-            owner,
-            repo,
-            pull_number: issueNumber,
-            reviewers: assignees
-        });
+            await octokit.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: issueNumber,
+                reviewers: assignees
+            });
+        }
     }
 };
 
