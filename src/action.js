@@ -236,23 +236,22 @@ const runAction = async (octokit, context, parameters) => {
             issue_number: issueNumber,
             assignees
         });
-        if (!isIssue) {
-            // Assign PR reviewers
-            console.log(
-                `Assigning PR ${issueNumber} to users ${JSON.stringify(
-                    assignees
-                )}`
-            );
-
-            await octokit.rest.pulls.requestReviewers({
-                owner,
-                repo,
-                pull_number: issueNumber,
-                reviewers: assignees
-            });
-        }
     } else if (!allowNoAssignees) {
-        throw new Error('No candidates found for assignement');
+        throw new Error('No candidates found for assignment');
+    }
+
+    // Assign PR reviewers
+    if (!isIssue) {
+        console.log(
+            `Assigning PR ${issueNumber} to users ${JSON.stringify(assignees)}`
+        );
+
+        await octokit.rest.pulls.requestReviewers({
+            owner,
+            repo,
+            pull_number: issueNumber,
+            reviewers: assignees
+        });
     }
 };
 
