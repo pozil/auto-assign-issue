@@ -127,10 +127,15 @@ const runAction = async (octokit, context, parameters) => {
     } = parameters;
 
     // Get issue info from context
-    let issueNumber = context.issue?.number || context.pull_request?.number;
+    let issueNumber =
+        context.issue?.number ||
+        context.pull_request?.number ||
+        context.workflow_run?.pull_requests[0].number;
     let isIssue = context.issue ? true : false;
     const author =
-        context.issue?.user.login || context.pull_request?.user.login;
+        context.issue?.user.login ||
+        context.pull_request?.user.login ||
+        context.workflow_run?.actor.login;
 
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
