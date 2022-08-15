@@ -265,7 +265,7 @@ export interface OutputConfiguration {
 }
 
 export type AddHelpTextPosition = 'beforeAll' | 'before' | 'after' | 'afterAll';
-export type HookEvent = 'preAction' | 'postAction';
+export type HookEvent = 'preSubcommand' | 'preAction' | 'postAction';
 export type OptionValueSource = 'default' | 'env' | 'config' | 'cli';
 
 export interface OptionValues {
@@ -416,7 +416,7 @@ export class Command {
   /**
    * Register callback to use as replacement for calling process.exit.
    */
-  exitOverride(callback?: (err: CommanderError) => never|void): this;
+  exitOverride(callback?: (err: CommanderError) => never | void): this;
 
   /**
    * Display error message and exit (or call exitOverride).
