@@ -127,10 +127,15 @@ const runAction = async (octokit, context, parameters) => {
     } = parameters;
 
     // Get issue info from context
-    let issueNumber = context.issue?.number || context.pull_request?.number;
+    let issueNumber =
+        context.issue?.number ||
+        context.pull_request?.number ||
+        context.workflow_run?.pull_requests[0].number;
     let isIssue = context.issue ? true : false;
     const author =
-        context.issue?.user.login || context.pull_request?.user.login;
+        context.issue?.user.login ||
+        context.pull_request?.user.login ||
+        context.workflow_run?.actor.login;
 
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
@@ -204,8 +209,8 @@ const runAction = async (octokit, context, parameters) => {
     // Remove duplicates from assignees
     assignees = [...new Set(assignees)];
 
-    // Remove author if allowSelfAssign is disabled OR if it's a PR (where it's not allowed).
-    if (!allowSelfAssign || !isIssue) {
+    // Remove author if allowSelfAssign is disabled
+    if (!allowSelfAssign) {
         const foundIndex = assignees.indexOf(author);
         if (foundIndex !== -1) {
             assignees.splice(foundIndex, 1);
@@ -231,8 +236,19 @@ const runAction = async (octokit, context, parameters) => {
             issue_number: issueNumber,
             assignees
         });
-        if (!isIssue) {
-            // Assign PR reviewers
+    } else if (!allowNoAssignees) {
+        throw new Error('No candidates found for assignment');
+    }
+
+    // Assign PR reviewers
+    if (!isIssue) {
+        // Remove author from reviewers
+        const foundIndex = assignees.indexOf(author);
+        if (foundIndex !== -1) {
+            assignees.splice(foundIndex, 1);
+        }
+
+        if (assignees.length > 0) {
             console.log(
                 `Assigning PR ${issueNumber} to users ${JSON.stringify(
                     assignees
@@ -246,8 +262,6 @@ const runAction = async (octokit, context, parameters) => {
                 reviewers: assignees
             });
         }
-    } else if (!allowNoAssignees) {
-        throw new Error('No candidates found for assignement');
     }
 };
 
