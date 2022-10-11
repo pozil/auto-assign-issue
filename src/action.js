@@ -149,6 +149,8 @@ const runAction = async (octokit, context, parameters) => {
         context.pull_request?.user.login ||
         context.workflow_run?.actor.login;
 
+    console.log(JSON.stringify(context));
+
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
         !issueNumber &&
@@ -176,7 +178,7 @@ const runAction = async (octokit, context, parameters) => {
         : null;
 
     // Abort if abortIfPreviousAssignees is set and there are assignees
-    if (isIssue && abortIfPreviousAssignees && curAssignees.length > 0) {
+    if (abortIfPreviousAssignees && curAssignees.length > 0) {
         console.log(
             'Aborting action to satisfy "abortIfPreviousAssignees" flag.'
         );
