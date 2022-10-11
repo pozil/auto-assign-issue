@@ -47,10 +47,8 @@ const getIssueMock = jest.fn(() =>
         data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
     })
 );
-const getNonExistIssueMock = jest.fn(() =>
-    Promise.reject({
-        data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
-    })
+const getIssueMockForPR = jest.fn(() =>
+    Promise.reject('This is not an issue, it is a PR)')
 );
 const getPRMock = jest.fn(() =>
     Promise.resolve({
@@ -87,7 +85,7 @@ const octokitMockForPRs = {
     rest: {
         teams: { listMembersInOrg: listTeamMembersMock },
         issues: {
-            get: getNonExistIssueMock,
+            get: getIssueMockForPR,
             addAssignees: addIssueAssigneesMock,
             removeAssignees: removeIssueAssigneesMock
         },
