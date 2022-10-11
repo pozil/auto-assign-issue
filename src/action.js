@@ -251,9 +251,9 @@ const runAction = async (octokit, context, parameters) => {
 
         // Assign issue
         console.log(
-            `Assigning ${
+            `Setting assignees for ${
                 isIssue ? 'issue' : 'PR'
-            } ${issueNumber} to users ${JSON.stringify(newAssignees)}`
+            } ${issueNumber}: ${JSON.stringify(newAssignees)}`
         );
         await octokit.rest.issues.addAssignees({
             owner,
@@ -275,7 +275,7 @@ const runAction = async (octokit, context, parameters) => {
 
         if (newAssignees.length > 0) {
             console.log(
-                `Assigning PR ${issueNumber} to reviewers ${JSON.stringify(
+                `Setting reviewers for PR ${issueNumber}: ${JSON.stringify(
                     newAssignees
                 )}`
             );
