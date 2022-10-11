@@ -13,6 +13,10 @@ inputs:
     numOfAssignee:
         description: 'Number of random assignee'
         required: false
+    abortIfPreviousAssignees:
+        description: 'Flag that aborts the action if there were assignees previously.'
+        required: false
+        default: false
     removePreviousAssignees:
         description: 'Flag that removes assignees before assigning them (useful the issue is reasigned).'
         required: false

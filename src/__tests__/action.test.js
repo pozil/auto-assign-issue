@@ -175,6 +175,16 @@ describe('action', () => {
             ).rejects.toThrow(/No candidates found/);
         });
 
+        it('aborts when abortIfPreviousAssignees is true and there are assignees', async () => {
+            await runAction(octokitMock, CONTEXT_PAYLOAD, {
+                assigneesString: 'author',
+                abortIfPreviousAssignees: true
+            });
+
+            expect(removeIssueAssigneesMock).not.toHaveBeenCalled();
+            expect(addIssueAssigneesMock).not.toHaveBeenCalled();
+        });
+
         it('works when allowNoAssignees is true and there are no candidates', async () => {
             await runAction(octokitMock, CONTEXT_PAYLOAD, {
                 assigneesString: 'author',

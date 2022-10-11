@@ -10,6 +10,10 @@ try {
     const numOfAssigneeString = core.getInput('numOfAssignee', {
         require: false
     });
+    const abortIfPreviousAssignees = core.getBooleanInput(
+        'abortIfPreviousAssignees',
+        { required: false }
+    );
     const removePreviousAssignees = core.getBooleanInput(
         'removePreviousAssignees',
         { required: false }
@@ -32,6 +36,7 @@ try {
         assigneesString,
         teamsString,
         numOfAssigneeString,
+        abortIfPreviousAssignees,
         removePreviousAssignees,
         allowNoAssignees,
         allowSelfAssign
