@@ -142,8 +142,11 @@ const runAction = async (octokit, context, parameters) => {
     let issueNumber =
         context.issue?.number ||
         context.pull_request?.number ||
-        context.workflow_run?.pull_requests[0].number;
-    let isIssue = context.issue ? true : false;
+        context.workflow_run?.pull_requests[0]?.number;
+    let isIssue =
+        typeof context.pull_request === 'undefined' &&
+        context.workflow_run?.pull_requests?.length === null;
+    const isProjectCard = typeof context.project_card !== 'undefined';
     const author =
         context.issue?.user.login ||
         context.pull_request?.user.login ||
@@ -166,16 +169,14 @@ const runAction = async (octokit, context, parameters) => {
     // Get org owner and repo name from context
     const [owner, repo] = context.repository.full_name.split('/');
 
-    // If this flag is false is because the context object didn't bring the issue one
-    // But can be an issue coming from a card, that's why we need to check it asking the API
-    if (!isIssue) {
+    // If isIssue is false, it could be an issue coming from a card (not included in context)
+    // That's why we need to check it with the API
+    if (!isIssue && isProjectCard) {
         isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
     }
 
     // Get assignees
-    const curAssignees = isIssue
-        ? await getAssignees(octokit, owner, repo, issueNumber)
-        : null;
+    const curAssignees = await getAssignees(octokit, owner, repo, issueNumber);
 
     // Abort if abortIfPreviousAssignees is set and there are assignees
     if (abortIfPreviousAssignees && curAssignees.length > 0) {
