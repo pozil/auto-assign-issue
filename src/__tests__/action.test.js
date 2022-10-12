@@ -1,13 +1,10 @@
-const {
-    runAction,
-    pickNRandomFromArray,
-    getTeamMembers
-} = require('../action.js');
+const { runAction } = require('../action.js');
 
 const TEAM_MEMBERS = {
     teamA: { data: [{ login: 'userA1' }, { login: 'userA2' }] },
     teamB: { data: [{ login: 'userB1' }] }
 };
+
 const ISSUE_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrg/mockRepo' },
     issue: {
@@ -33,7 +30,6 @@ const WORKFLOW_RUN_CONTEXT_PAYLOAD = {
         actor: { login: 'author' }
     }
 };
-
 const PROJECT_CONTEXT_PAYLOAD = {
     repository: { full_name: 'mockOrgCard/mockRepoCard' },
     project_card: {
@@ -83,51 +79,15 @@ describe('action', () => {
         jest.clearAllMocks();
     });
 
-    describe('pickNRandomFromArray', () => {
-        it('works when selection size < array length', () => {
-            const result = pickNRandomFromArray([1, 2, 3, 4], 2);
-            expect(result.length).toBe(2);
-        });
-
-        it('works when selection size > array length', () => {
-            const result = pickNRandomFromArray([1, 2, 3, 4], 5);
-            expect(result.length).toBe(4);
-        });
-
-        it('fails when array is empty', () => {
-            expect(() => pickNRandomFromArray([], 2)).toThrow(/empty list/);
-        });
-    });
-
-    describe('getTeamMembers', () => {
-        it('works with multiple teams', async () => {
-            const org = 'myOrg';
-            const teamNames = ['teamA', 'teamB'];
-
-            const teamMembers = await getTeamMembers(
-                octokitMock,
-                org,
-                teamNames
-            );
-
-            expect(listTeamMembersMock).toHaveBeenCalledTimes(teamNames.length);
-            expect(listTeamMembersMock).toHaveBeenNthCalledWith(1, {
-                org,
-                team_slug: teamNames[0]
-            });
-            expect(listTeamMembersMock).toHaveBeenNthCalledWith(2, {
-                org,
-                team_slug: teamNames[1]
-            });
-            expect(teamMembers).toStrictEqual(['userA1', 'userA2', 'userB1']);
-        });
-    });
-
-    describe('runAction', () => {
+    describe('issues', () => {
         it('fails when missing issue from context', async () => {
-            await expect(runAction(octokitMock, {}, {})).rejects.toThrow(
-                /find issue/
-            );
+            await expect(
+                runAction(
+                    octokitMock,
+                    { repository: { full_name: 'mockOrg/mockRepo' } },
+                    { assignees: ['author'] }
+                )
+            ).rejects.toThrow(/find issue/);
         });
 
         it('fails when missing both assignees and teams inputs', async () => {
@@ -136,19 +96,10 @@ describe('action', () => {
             ).rejects.toThrow(/required parameters/);
         });
 
-        it('fails when numOfAssignee input is not a number', async () => {
-            await expect(
-                runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                    assigneesString: 'someValue',
-                    numOfAssigneeString: 'invalid'
-                })
-            ).rejects.toThrow(/invalid for numOfAssignee/);
-        });
-
         it('fails when allowSelfAssign is false and there are no candidates', async () => {
             await expect(
                 runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                    assigneesString: 'author',
+                    assignees: ['author'],
                     allowSelfAssign: false
                 })
             ).rejects.toThrow(/No candidates found/);
@@ -156,7 +107,7 @@ describe('action', () => {
 
         it('aborts when abortIfPreviousAssignees is true and there are previous assignees', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'author',
+                assignees: ['author'],
                 abortIfPreviousAssignees: true
             });
 
@@ -166,7 +117,7 @@ describe('action', () => {
 
         it('works when allowNoAssignees is true and there are no candidates', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'author',
+                assignees: ['author'],
                 allowNoAssignees: true,
                 allowSelfAssign: false
             });
@@ -178,7 +129,7 @@ describe('action', () => {
 
         it('works with self assigned issue', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'author'
+                assignees: ['author']
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
@@ -194,7 +145,7 @@ describe('action', () => {
 
         it('works with assignees only, no random pick', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1,user2'
+                assignees: ['user1', 'user2']
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
@@ -210,7 +161,7 @@ describe('action', () => {
 
         it('works with teams only, no random pick', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                teamsString: 'teamA,teamB'
+                teams: ['teamA', 'teamB']
             });
 
             expect(listTeamMembersMock).toHaveBeenCalledTimes(2);
@@ -225,8 +176,8 @@ describe('action', () => {
 
         it('works with assignees and teams with duplicates, no random pick', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1,user2,userA2',
-                teamsString: 'teamA,teamB'
+                assignees: ['user1', 'user2', 'userA2'],
+                teams: ['teamA', 'teamB']
             });
 
             expect(addIssueAssigneesMock).toHaveBeenCalledWith({
@@ -239,8 +190,8 @@ describe('action', () => {
 
         it('works with assignees, random pick', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1,user2,userA2',
-                numOfAssigneeString: 2
+                assignees: ['user1', 'user2', 'userA2'],
+                numOfAssignee: 2
             });
 
             expect(
@@ -250,8 +201,8 @@ describe('action', () => {
 
         it('works with teams, random pick', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                teamsString: 'teamA,teamB',
-                numOfAssigneeString: 2
+                teams: ['teamA', 'teamB'],
+                numOfAssignee: 2
             });
 
             expect(
@@ -259,9 +210,26 @@ describe('action', () => {
             ).toBe(2);
         });
 
+        it('removes previous assignees', async () => {
+            await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
+                assignees: ['user1'],
+                removePreviousAssignees: true
+            });
+
+            expect(getIssueMock).toHaveBeenCalled();
+            expect(removeIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['userA', 'userB'],
+                issue_number: ISSUE_CONTEXT_PAYLOAD.issue.number,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
+    });
+
+    describe('PRs', () => {
         it('works with pull requests', async () => {
             await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1,user2'
+                assignees: ['user1', 'user2']
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
@@ -281,38 +249,9 @@ describe('action', () => {
             });
         });
 
-        it('works with project card events (for issues)', async () => {
-            await runAction(octokitMock, PROJECT_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1,user2'
-            });
-
-            expect(addIssueAssigneesMock).toHaveBeenCalled();
-            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
-                assignees: ['user1', 'user2'],
-                issue_number: 669,
-                owner: 'mockOrgCard',
-                repo: 'mockRepoCard'
-            });
-        });
-
-        it('removes previous assignees', async () => {
-            await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1',
-                removePreviousAssignees: true
-            });
-
-            expect(getIssueMock).toHaveBeenCalled();
-            expect(removeIssueAssigneesMock).toHaveBeenCalledWith({
-                assignees: ['userA', 'userB'],
-                issue_number: ISSUE_CONTEXT_PAYLOAD.issue.number,
-                owner: 'mockOrg',
-                repo: 'mockRepo'
-            });
-        });
-
-        it('removes previous reviewers', async () => {
+        it('removes previous PR reviewers', async () => {
             await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
-                assigneesString: 'user1',
+                assignees: ['user1'],
                 removePreviousAssignees: true
             });
 
@@ -327,23 +266,23 @@ describe('action', () => {
 
         it('assigns author to pull request assignee', async () => {
             await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
-                assigneesString: 'author,user1,user2',
+                assignees: ['author', 'user1'],
                 allowSelfAssign: true
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
             expect(addIssueAssigneesMock).toHaveBeenCalledWith({
-                assignees: ['author', 'user1', 'user2'],
+                assignees: ['author', 'user1'],
                 issue_number: PR_CONTEXT_PAYLOAD.pull_request.number,
                 owner: 'mockOrg',
                 repo: 'mockRepo'
             });
         });
 
-        it('does not assigns author to pull request reviewer', async () => {
+        it('does not assigns author as PR reviewer', async () => {
             await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
-                assigneesString: 'author,user1,user2',
+                assignees: ['author', 'user1', 'user2'],
                 allowSelfAssign: true
             });
 
@@ -355,17 +294,35 @@ describe('action', () => {
                 repo: 'mockRepo'
             });
         });
+    });
 
-        it('assigns author to pull request assignee from workflow_run', async () => {
+    describe('Project Cards', () => {
+        it('works with project card events (for issues)', async () => {
+            await runAction(octokitMock, PROJECT_CONTEXT_PAYLOAD, {
+                assignees: ['user1', 'user2']
+            });
+
+            expect(addIssueAssigneesMock).toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['user1', 'user2'],
+                issue_number: 669,
+                owner: 'mockOrgCard',
+                repo: 'mockRepoCard'
+            });
+        });
+    });
+
+    describe('PRs in workflow run', () => {
+        it('assigns author as PR assignee from workflow_run', async () => {
             await runAction(octokitMock, WORKFLOW_RUN_CONTEXT_PAYLOAD, {
-                assigneesString: 'author,user1,user2',
+                assignees: ['author', 'user2'],
                 allowSelfAssign: true
             });
 
             expect(listTeamMembersMock).not.toHaveBeenCalled();
             expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
             expect(addIssueAssigneesMock).toHaveBeenCalledWith({
-                assignees: ['author', 'user1', 'user2'],
+                assignees: ['author', 'user2'],
                 issue_number:
                     WORKFLOW_RUN_CONTEXT_PAYLOAD.workflow_run.pull_requests[0]
                         .number,
@@ -374,9 +331,9 @@ describe('action', () => {
             });
         });
 
-        it('does not assigns author to pull request reviewer from workflow_run', async () => {
+        it('does not assigns author as PR reviewer from workflow_run', async () => {
             await runAction(octokitMock, WORKFLOW_RUN_CONTEXT_PAYLOAD, {
-                assigneesString: 'author,user1,user2',
+                assignees: ['author', 'user1', 'user2'],
                 allowSelfAssign: true
             });
 

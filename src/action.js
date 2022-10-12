@@ -1,127 +1,20 @@
-const pickNRandomFromArray = (arr, n) => {
-    if (arr.length === 0) {
-        throw new Error('Can not pick random from empty list.');
-    }
-    const available = [...arr];
-    const result = [];
-    for (let i = 0; i < n && available.length > 0; i++) {
-        const randomIndex = Math.floor(Math.random() * available.length);
-        result.push(available.splice(randomIndex, 1)[0]);
-    }
-    return result;
-};
-
-const getTeamMembers = async (octokit, org, teamNames) => {
-    const teamMemberRequests = await Promise.all(
-        teamNames.map((teamName) =>
-            octokit.rest.teams.listMembersInOrg({
-                org,
-                team_slug: teamName
-            })
-        )
-    ).catch((err) => {
-        const newErr = new Error('Failed to retrieve team members');
-        newErr.stack += `\nCaused by: ${err.stack}`;
-        throw newErr;
-    });
-    return teamMemberRequests
-        .map((response) => response.data)
-        .reduce((all, cur) => all.concat(cur), [])
-        .map((user) => user.login);
-};
-
-const getAssignees = async (octokit, owner, repo, issue_number) => {
-    const issue = await octokit.rest.issues.get({
-        owner,
-        repo,
-        issue_number
-    });
-    const assignees = issue.data.assignees.map((assignee) => assignee.login);
-    return assignees;
-};
-
-const removeAssignees = async (
-    octokit,
-    owner,
-    repo,
-    issue_number,
-    assignees
-) => {
-    try {
-        console.log(
-            `Remove issue ${issue_number} assignees ${JSON.stringify(
-                assignees
-            )}`
-        );
-        await octokit.rest.issues.removeAssignees({
-            owner,
-            repo,
-            issue_number,
-            assignees
-        });
-    } catch (err) {
-        const newErr = new Error('Failed to remove previous assignees');
-        newErr.stack += `\nCaused by: ${err.stack}`;
-        throw newErr;
-    }
-};
-
-const isAnIssue = async (octokit, owner, repo, issue_number) => {
-    let isAnIssue = false;
-
-    try {
-        const issue = await octokit.rest.issues.get({
-            owner,
-            repo,
-            issue_number
-        });
-        // In private repos, an exception is raised. In public ones, extra info comes.
-        if (!issue?.data?.pull_request) {
-            // if the pull_request node comes, it means is non a real issue, it is a PR
-            isAnIssue = true;
-        }
-    } catch (err) {
-        // It's the only way to identify if it's an issue, trying to retrieve its data
-    }
-    return isAnIssue;
-};
-
-const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
-    try {
-        const issue = await octokit.rest.pulls.get({
-            owner,
-            repo,
-            pull_number
-        });
-        const requested_reviewers = issue.data.requested_reviewers.map(
-            (requested_reviewers) => requested_reviewers.login
-        );
-        console.log(
-            `Remove PR ${issue} reviewers ${JSON.stringify(
-                requested_reviewers
-            )}`
-        );
-        await octokit.rest.pulls.removeRequestedReviewers({
-            owner,
-            repo,
-            pull_number,
-            reviewers: requested_reviewers
-        });
-    } catch (err) {
-        const newErr = new Error('Failed to remove previous reviewers');
-        newErr.stack += `\nCaused by: ${err.stack}`;
-        throw newErr;
-    }
-};
+const {
+    pickNRandomFromArray,
+    getAssignees,
+    getTeamMembers,
+    removeAssignees,
+    isAnIssue,
+    removeAllReviewers
+} = require('./utils');
 
 /**
  * Runs the auto-assign issue action
  * @param {Object} octokit
  * @param {Object} context
  * @param {Object} parameters
- * @param {string} parameters.assigneesString
- * @param {string} parameters.teamsString
- * @param {string} parameters.numOfAssigneeString
+ * @param {string[]} parameters.assignees
+ * @param {string[]} parameters.teams
+ * @param {number} parameters.numOfAssignee
  * @param {boolean} parameters.abortIfPreviousAssignees
  * @param {boolean} parameters.removePreviousAssignees
  * @param {boolean} parameters.allowNoAssignees
@@ -129,48 +22,49 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
  */
 const runAction = async (octokit, context, parameters) => {
     const {
-        assigneesString,
-        teamsString,
-        numOfAssigneeString,
+        assignees = [],
+        teams = [],
+        numOfAssignee = 0,
         abortIfPreviousAssignees = false,
         removePreviousAssignees = false,
         allowNoAssignees = false,
         allowSelfAssign = true
     } = parameters;
 
-    // Get issue info from context
+    // Check assignees and teams parameters
+    if (assignees.length === 0 && teams.length === 0) {
+        throw new Error(
+            'Missing required parameters: you must provide assignees or teams'
+        );
+    }
+
+    // Get context info
     let issueNumber =
         context.issue?.number ||
         context.pull_request?.number ||
         context.workflow_run?.pull_requests[0]?.number;
     let isIssue =
+        typeof context.issue !== 'undefined' &&
         typeof context.pull_request === 'undefined' &&
-        context.workflow_run?.pull_requests?.length === null;
-    const isProjectCard = typeof context.project_card !== 'undefined';
+        context.workflow_run?.pull_requests?.length === undefined;
     const author =
         context.issue?.user.login ||
         context.pull_request?.user.login ||
         context.workflow_run?.actor.login;
+    const [owner, repo] = context.repository.full_name.split('/');
 
-    // If the issue is not found directly, maybe it came for a card movement with a linked issue
+    // If the issue is not found directly, maybe it came for a card movement with a linked issue/PR
     if (
         !issueNumber &&
         context?.project_card?.content_url?.includes('issues')
     ) {
         const contentUrlParts = context.project_card.content_url.split('/');
         issueNumber = parseInt(contentUrlParts[contentUrlParts.length - 1], 10);
+        // Check with the API that issueNumber is tied to an issue (it could be a PR in this case)
+        isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
     }
     if (!issueNumber) {
         throw new Error(`Couldn't find issue info in current context`);
-    }
-
-    // Get org owner and repo name from context
-    const [owner, repo] = context.repository.full_name.split('/');
-
-    // If isIssue is false, it could be an issue coming from a card (not included in context)
-    // That's why we need to check it with the API
-    if (!isIssue && isProjectCard) {
-        isIssue = await isAnIssue(octokit, owner, repo, issueNumber);
     }
 
     // Get assignees
@@ -184,25 +78,6 @@ const runAction = async (octokit, context, parameters) => {
         return;
     }
 
-    // Check assignees and teams parameters
-    if (
-        (!assigneesString || !assigneesString.trim()) &&
-        (!teamsString || !teamsString.trim())
-    ) {
-        throw new Error(
-            'Missing required parameters: you must provide assignees or teams'
-        );
-    }
-    let numOfAssignee = 0;
-    if (numOfAssigneeString) {
-        numOfAssignee = parseInt(numOfAssigneeString, 10);
-        if (isNaN(numOfAssignee)) {
-            throw new Error(
-                `Invalid value ${numOfAssigneeString} for numOfAssignee`
-            );
-        }
-    }
-
     // Remove previous assignees if needed
     if (removePreviousAssignees) {
         await removeAssignees(octokit, owner, repo, issueNumber, curAssignees);
@@ -212,30 +87,19 @@ const runAction = async (octokit, context, parameters) => {
         }
     }
 
-    // Get issue assignees
-    let newAssignees = [];
+    // Get new issue assignees
+    let newAssignees = assignees;
 
-    // Get users
-    if (assigneesString) {
-        newAssignees = assigneesString
-            .split(',')
-            .map((assigneeName) => assigneeName.trim());
-    }
-    // Get team members
-    if (teamsString) {
-        const teamNames = teamsString
-            .split(',')
-            .map((teamName) => teamName.trim());
-        if (teamNames) {
-            const teamMembers = await getTeamMembers(octokit, owner, teamNames);
-            newAssignees = newAssignees.concat(teamMembers);
-        }
+    // Get assignee team members
+    if (teams.length > 0) {
+        const teamMembers = await getTeamMembers(octokit, owner, teams);
+        newAssignees = newAssignees.concat(teamMembers);
     }
 
     // Remove duplicates from assignees
     newAssignees = [...new Set(newAssignees)];
 
-    // Remove author if allowSelfAssign is disabled
+    // Remove author if allowSelfAssign is false
     if (!allowSelfAssign) {
         const foundIndex = newAssignees.indexOf(author);
         if (foundIndex !== -1) {
@@ -280,7 +144,6 @@ const runAction = async (octokit, context, parameters) => {
                     newAssignees
                 )}`
             );
-
             await octokit.rest.pulls.requestReviewers({
                 owner,
                 repo,
@@ -292,7 +155,5 @@ const runAction = async (octokit, context, parameters) => {
 };
 
 module.exports = {
-    getTeamMembers,
-    pickNRandomFromArray,
     runAction
 };

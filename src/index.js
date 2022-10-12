@@ -1,15 +1,29 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 const { runAction } = require('./action');
+const { parseIntInput, parseCsvInput } = require('./utils');
 
 try {
     // Get params
     const gitHubToken = core.getInput('repo-token', { required: true });
-    const assigneesString = core.getInput('assignees', { required: false });
-    const teamsString = core.getInput('teams', { required: false });
-    const numOfAssigneeString = core.getInput('numOfAssignee', {
-        require: false
-    });
+    const assignees = parseCsvInput(
+        core.getInput('assignees', { required: false })
+    );
+    const teams = parseCsvInput(core.getInput('teams', { required: false }));
+    let numOfAssignee;
+    try {
+        numOfAssignee = parseIntInput(
+            core.getInput('numOfAssignee', {
+                require: false
+            }),
+            0
+        );
+    } catch (error) {
+        throw new Error(
+            `Failed to parse value for numOfAssignee: ${error.message}`
+        );
+    }
+
     const abortIfPreviousAssignees = core.getBooleanInput(
         'abortIfPreviousAssignees',
         { required: false }
@@ -33,9 +47,9 @@ try {
 
     // Run action
     runAction(octokit, contextPayload, {
-        assigneesString,
-        teamsString,
-        numOfAssigneeString,
+        assignees,
+        teams,
+        numOfAssignee,
         abortIfPreviousAssignees,
         removePreviousAssignees,
         allowNoAssignees,
