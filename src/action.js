@@ -152,8 +152,6 @@ const runAction = async (octokit, context, parameters) => {
         context.pull_request?.user.login ||
         context.workflow_run?.actor.login;
 
-    console.log(JSON.stringify(context));
-
     // If the issue is not found directly, maybe it came for a card movement with a linked issue
     if (
         !issueNumber &&
