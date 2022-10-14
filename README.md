@@ -65,6 +65,9 @@ jobs:
 
 ### Working with Project Cards
 
+> **Warning**
+> `project_card` events are only supported on legacy Project (Classic) ([see docs](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#project_card)).
+
 This example assigns a project card to the `triage` team when the card is moved.
 It removes previously assigned users.
 
