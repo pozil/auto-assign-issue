@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.8](https://github.com/humanwhocodes/config-array/compare/v0.11.7...v0.11.8) (2022-12-14)
+
+
+### Bug Fixes
+
+* Ensure gitignore-style directory ignores ([#74](https://github.com/humanwhocodes/config-array/issues/74)) ([8e17f4a](https://github.com/humanwhocodes/config-array/commit/8e17f4a7378cb0b417e1103d60ef397b26d2f917))
+
 ## [0.11.7](https://github.com/humanwhocodes/config-array/compare/v0.11.6...v0.11.7) (2022-10-28)
 
 
