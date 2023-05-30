@@ -31,6 +31,8 @@ on:
 jobs:
     auto-assign:
         runs-on: ubuntu-latest
+        permissions:
+            issues: write
         steps:
             - name: 'Auto-assign issue'
               uses: pozil/auto-assign-issue@v1
@@ -54,6 +56,8 @@ on:
 jobs:
     auto-assign:
         runs-on: ubuntu-latest
+        permissions:
+            issues: write
         steps:
             - name: 'Auto-assign PR'
               uses: pozil/auto-assign-issue@v1
@@ -80,6 +84,8 @@ on:
 jobs:
     auto-assign:
         runs-on: ubuntu-latest
+        permissions:
+            issues: write
         steps:
             - name: 'Auto-assign card'
               uses: pozil/auto-assign-issue@v1
