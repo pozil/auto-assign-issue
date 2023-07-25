@@ -97,7 +97,7 @@ jobs:
 
 ### Specifying a dynamic user
 
-Instead of hardcoding the user name in the workflow, you can use a secret:
+Instead of hardcoding the user name in the workflow, you can use a repository variable:
 
--   create a GitHub secret named `DEFAULT_ISSUE_ASSIGNEE` with the name of the user
--   use this value `${{ secrets.DEFAULT_ISSUE_ASSIGNEE }}` instead of the username in the workflow.
+-   create a GitHub repo variable named `DEFAULT_ISSUE_ASSIGNEE` with the name of the user
+-   use this value `${{ vars.DEFAULT_ISSUE_ASSIGNEE }}` instead of the username in the workflow.
