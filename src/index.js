@@ -39,6 +39,20 @@ try {
         required: false
     });
 
+    let manualIssueNumber;
+    try {
+        manualIssueNumber = parseIntInput(
+            core.getInput('issueNumber', {
+                require: false
+            }),
+            0
+        );
+    } catch (error) {
+        throw new Error(
+            `Failed to parse value for issueNumber: ${error.message}`
+        );
+    }
+
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);
 
@@ -53,7 +67,8 @@ try {
         abortIfPreviousAssignees,
         removePreviousAssignees,
         allowNoAssignees,
-        allowSelfAssign
+        allowSelfAssign,
+        manualIssueNumber
     });
 } catch (error) {
     core.setFailed(error.message);

@@ -19,6 +19,7 @@ const {
  * @param {boolean} parameters.removePreviousAssignees
  * @param {boolean} parameters.allowNoAssignees
  * @param {boolean} parameters.allowSelfAssign
+ * @param {number} parameters.manualIssueNumber
  */
 const runAction = async (octokit, context, parameters) => {
     const {
@@ -28,7 +29,8 @@ const runAction = async (octokit, context, parameters) => {
         abortIfPreviousAssignees = false,
         removePreviousAssignees = false,
         allowNoAssignees = false,
-        allowSelfAssign = true
+        allowSelfAssign = true,
+        manualIssueNumber = 0
     } = parameters;
 
     // Check assignees and teams parameters
@@ -38,11 +40,6 @@ const runAction = async (octokit, context, parameters) => {
         );
     }
 
-    // Get context info
-    let issueNumber =
-        context.issue?.number ||
-        context.pull_request?.number ||
-        context.workflow_run?.pull_requests[0]?.number;
     let isIssue =
         typeof context.issue !== 'undefined' &&
         typeof context.pull_request === 'undefined' &&
@@ -53,7 +50,16 @@ const runAction = async (octokit, context, parameters) => {
         context.workflow_run?.actor.login;
     const [owner, repo] = context.repository.full_name.split('/');
 
-    // If the issue is not found directly, maybe it came for a card movement with a linked issue/PR
+    let issueNumber = manualIssueNumber
+    if (manualIssueNumber === 0) {
+        // Try to get number from the context.
+        issueNumber =
+            context.issue?.number ||
+            context.pull_request?.number ||
+            context.workflow_run?.pull_requests[0]?.number;
+    }
+
+    // If the issue is not found in context or by parameter, maybe it came for a card movement with a linked issue/PR.
     if (
         !issueNumber &&
         context?.project_card?.content_url?.includes('issues')

@@ -29,6 +29,9 @@ inputs:
         description: 'Flag that allows self-assignment to the issue author.'
         required: false
         default: true
+    issueNumber:
+        description: 'Manually specified issue (or PR) ID to be used instead of the one in the context.'
+        required: false
 
 runs:
     using: 'node16'
