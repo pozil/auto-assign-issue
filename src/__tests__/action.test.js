@@ -115,6 +115,25 @@ describe('action', () => {
             expect(addIssueAssigneesMock).not.toHaveBeenCalled();
         });
 
+        it('works when issue number is passed manually', async () => {
+            const context = {
+                repository: { full_name: 'mockOrg/mockRepo' }
+            };
+            const parameters = {
+                assignees: ['author'],
+                manualIssueNumber: 123123
+            };
+
+            await runAction(octokitMock, context, parameters);
+
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                owner: context.repository.full_name.split('/')[0],
+                repo: context.repository.full_name.split('/')[1],
+                issue_number: parameters.manualIssueNumber,
+                assignees: parameters.assignees
+            });
+        });
+
         it('works when allowNoAssignees is true and there are no candidates', async () => {
             await runAction(octokitMock, ISSUE_CONTEXT_PAYLOAD, {
                 assignees: ['author'],

@@ -13,6 +13,7 @@
 | `removePreviousAssignees`  | Boolean | false                                | false   | Flag that removes assignees before assigning them (useful the issue is reasigned).                                                                                                                                                                                                         |
 | `allowNoAssignees`         | Boolean | false                                | false   | Flag that prevents the action from failing when there are no assignees.                                                                                                                                                                                                                    |
 | `allowSelfAssign`          | Boolean | false                                | true    | Flag that allows self-assignment to the issue author.<br/><br/>This flag is ignored when working with PRs as self assigning a PR for review is forbidden by GitHub.                                                                                                                        |
+| `issueNumber`              | Number  | false                                | n/a     | Allows to override the issue number. This can be useful when context is missing.                                                                                                                                                                                                           |
 
 ## Examples
 

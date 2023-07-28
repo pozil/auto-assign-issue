@@ -50,7 +50,7 @@ const runAction = async (octokit, context, parameters) => {
         context.workflow_run?.actor.login;
     const [owner, repo] = context.repository.full_name.split('/');
 
-    let issueNumber = manualIssueNumber
+    let issueNumber = manualIssueNumber;
     if (manualIssueNumber === 0) {
         // Try to get number from the context.
         issueNumber =
