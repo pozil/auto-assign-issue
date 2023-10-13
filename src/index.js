@@ -53,9 +53,12 @@ try {
         );
     }
 
-    const teamIsPullRequestReviewer = core.getBooleanInput('teamIsPullRequestReviewer', {
+    const teamIsPullRequestReviewer = core.getBooleanInput(
+        'teamIsPullRequestReviewer',
+        {
             required: false
-        });
+        }
+    );
 
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);

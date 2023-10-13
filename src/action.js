@@ -140,8 +140,12 @@ const runAction = async (octokit, context, parameters) => {
 
     // Assign PR reviewers
     if (!isIssue) {
-        if (teamIsPullRequestReviewer){
-            console.log(`Setting reviewers for PR ${issueNumber}: ${JSON.stringify(teams)}`);
+        if (teamIsPullRequestReviewer) {
+            console.log(
+                `Setting reviewers for PR ${issueNumber}: ${JSON.stringify(
+                    teams
+                )}`
+            );
 
             await octokit.rest.pulls.requestReviewers({
                 owner,
