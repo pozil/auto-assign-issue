@@ -32,6 +32,10 @@ inputs:
     issueNumber:
         description: 'Manually specified issue (or PR) ID to be used instead of the one in the context.'
         required: false
+    teamIsPullRequestReviewer:
+        description: 'Flag that allows a team to be set as reviewer'
+        required: false
+        default: false
 
 runs:
     using: 'node16'
