@@ -32,7 +32,7 @@ const runAction = async (octokit, context, parameters) => {
         allowNoAssignees = false,
         allowSelfAssign = true,
         manualIssueNumber = 0,
-        teamIsPullRequestReviewer = false,
+        teamIsPullRequestReviewer = false
     } = parameters;
 
     // Check assignees and teams parameters
