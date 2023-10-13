@@ -20,6 +20,7 @@ const {
  * @param {boolean} parameters.allowNoAssignees
  * @param {boolean} parameters.allowSelfAssign
  * @param {number} parameters.manualIssueNumber
+ * @param {boolean} parameters.teamIsPullRequestReviewer
  */
 const runAction = async (octokit, context, parameters) => {
     const {
@@ -30,7 +31,8 @@ const runAction = async (octokit, context, parameters) => {
         removePreviousAssignees = false,
         allowNoAssignees = false,
         allowSelfAssign = true,
-        manualIssueNumber = 0
+        manualIssueNumber = 0,
+        teamIsPullRequestReviewer = false,
     } = parameters;
 
     // Check assignees and teams parameters
@@ -138,25 +140,36 @@ const runAction = async (octokit, context, parameters) => {
 
     // Assign PR reviewers
     if (!isIssue) {
-        // Remove author from reviewers
-        const newReviewers = [...newAssignees];
-        const foundIndex = newReviewers.indexOf(author);
-        if (foundIndex !== -1) {
-            newReviewers.splice(foundIndex, 1);
-        }
+        if (teamIsPullRequestReviewer){
+            console.log(`Setting reviewers for PR ${issueNumber}: ${JSON.stringify(teams)}`);
 
-        if (newReviewers.length > 0) {
-            console.log(
-                `Setting reviewers for PR ${issueNumber}: ${JSON.stringify(
-                    newReviewers
-                )}`
-            );
             await octokit.rest.pulls.requestReviewers({
                 owner,
                 repo,
                 pull_number: issueNumber,
-                reviewers: newReviewers
+                reviewers: teams
             });
+        } else {
+            // Remove author from reviewers
+            const newReviewers = [...newAssignees];
+            const foundIndex = newReviewers.indexOf(author);
+            if (foundIndex !== -1) {
+                newReviewers.splice(foundIndex, 1);
+            }
+
+            if (newReviewers.length > 0) {
+                console.log(
+                    `Setting reviewers for PR ${issueNumber}: ${JSON.stringify(
+                        newReviewers
+                    )}`
+                );
+                await octokit.rest.pulls.requestReviewers({
+                    owner,
+                    repo,
+                    pull_number: issueNumber,
+                    reviewers: newReviewers
+                });
+            }
         }
     }
 };

@@ -53,6 +53,10 @@ try {
         );
     }
 
+    const teamIsPullRequestReviewer = core.getBooleanInput('teamIsPullRequestReviewer', {
+            required: false
+        });
+
     // Get octokit
     const octokit = github.getOctokit(gitHubToken);
 
@@ -68,7 +72,8 @@ try {
         removePreviousAssignees,
         allowNoAssignees,
         allowSelfAssign,
-        manualIssueNumber
+        manualIssueNumber,
+        teamIsPullRequestReviewer
     });
 } catch (error) {
     core.setFailed(error.message);
