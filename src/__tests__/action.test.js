@@ -313,6 +313,22 @@ describe('action', () => {
                 repo: 'mockRepo'
             });
         });
+
+        it('works with team reviewer for pull request', async () => {
+            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+                teams: ['teamA'],
+                teamIsPullRequestReviewer: true
+            });
+
+            expect(listTeamMembersMock).toHaveBeenCalled();
+            expect(addIssueAssigneesMock).toHaveBeenCalledTimes(1);
+            expect(addIssueAssigneesMock).toHaveBeenCalledWith({
+                assignees: ['userA1', 'userA2'],
+                issue_number: PR_CONTEXT_PAYLOAD.pull_request.number,
+                owner: 'mockOrg',
+                repo: 'mockRepo'
+            });
+        });
     });
 
     describe('Project Cards', () => {
