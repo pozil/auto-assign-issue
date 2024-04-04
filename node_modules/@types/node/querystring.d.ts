@@ -11,7 +11,7 @@
  * when compatibility with browser code is desirable.
  * @see [source](https://github.com/nodejs/node/blob/v20.2.0/lib/querystring.js)
  */
-declare module 'querystring' {
+declare module "querystring" {
     interface StringifyOptions {
         encodeURIComponent?: ((str: string) => string) | undefined;
     }
@@ -20,7 +20,17 @@ declare module 'querystring' {
         decodeURIComponent?: ((str: string) => string) | undefined;
     }
     interface ParsedUrlQuery extends NodeJS.Dict<string | string[]> {}
-    interface ParsedUrlQueryInput extends NodeJS.Dict<string | number | boolean | ReadonlyArray<string> | ReadonlyArray<number> | ReadonlyArray<boolean> | null> {}
+    interface ParsedUrlQueryInput extends
+        NodeJS.Dict<
+            | string
+            | number
+            | boolean
+            | readonly string[]
+            | readonly number[]
+            | readonly boolean[]
+            | null
+        >
+    {}
     /**
      * The `querystring.stringify()` method produces a URL query string from a
      * given `obj` by iterating through the object's "own properties".
@@ -64,10 +74,10 @@ declare module 'querystring' {
      *
      * For example, the query string `'foo=bar&#x26;abc=xyz&#x26;abc=123'` is parsed into:
      *
-     * ```js
+     * ```json
      * {
-     *   foo: 'bar',
-     *   abc: ['xyz', '123']
+     *   "foo": "bar",
+     *   "abc": ["xyz", "123"]
      * }
      * ```
      *
@@ -126,6 +136,6 @@ declare module 'querystring' {
      */
     function unescape(str: string): string;
 }
-declare module 'node:querystring' {
-    export * from 'querystring';
+declare module "node:querystring" {
+    export * from "querystring";
 }

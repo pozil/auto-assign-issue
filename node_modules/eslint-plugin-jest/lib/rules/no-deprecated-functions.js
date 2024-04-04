@@ -13,7 +13,7 @@ const parseJestVersion = rawVersion => {
   const [majorVersion] = rawVersion.split('.');
   return parseInt(majorVersion, 10);
 };
-var _default = (0, _utils2.createRule)({
+var _default = exports.default = (0, _utils2.createRule)({
   name: __filename,
   meta: {
     docs: {
@@ -82,4 +82,3 @@ var _default = (0, _utils2.createRule)({
     };
   }
 });
-exports.default = _default;
