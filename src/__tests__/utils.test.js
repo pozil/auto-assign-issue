@@ -1,6 +1,6 @@
 const {
+    parseAssignments,
     parseIntInput,
-    parseCsvInput,
     pickNRandomFromArray,
     getTeamMembers
 } = require('../utils.js');
@@ -25,6 +25,45 @@ describe('utils', () => {
         jest.clearAllMocks();
     });
 
+    describe('parseAssignments', () => {
+        it('works when value is missing', async () => {
+            const values = parseAssignments('');
+            expect(values).toStrictEqual([]);
+        });
+
+        it('works with string list', async () => {
+            const values = parseAssignments('a,b,c');
+            expect(values).toStrictEqual(['a', 'b', 'c']);
+        });
+
+        it('works with some missing values and whitespace', async () => {
+            const values = parseAssignments(',a ,, , b,c,,');
+            expect(values).toStrictEqual(['a', 'b', 'c']);
+        });
+
+        it('works with weighted list', async () => {
+            const values = parseAssignments('a:1,b:2,c:3');
+            expect(values).toStrictEqual(['a', 'b', 'b', 'c', 'c', 'c']);
+        });
+
+        it('works with semi weighted list', async () => {
+            const values = parseAssignments('a,b:2,c');
+            expect(values).toStrictEqual(['a', 'b', 'b', 'c']);
+        });
+
+        it('fails when too many arguments', async () => {
+            expect(() => parseAssignments('a:1:unknown')).toThrow(
+                /Invalid assignment value/
+            );
+        });
+
+        it('fails when weight is invalid', async () => {
+            expect(() => parseAssignments('a:invalid')).toThrow(
+                /Invalid weight value/
+            );
+        });
+    });
+
     describe('parseIntInput', () => {
         it('works when value is a number', async () => {
             expect(parseIntInput('3', 0)).toBe(3);
@@ -38,24 +77,6 @@ describe('utils', () => {
             expect(() => parseIntInput('invalid', 0)).toThrow(
                 /Invalid integer value/
             );
-        });
-    });
-
-    describe('parseCsvInput', () => {
-        it('works when value is a CSV', async () => {
-            expect(parseCsvInput('1,2,3')).toStrictEqual(['1', '2', '3']);
-        });
-
-        it('works when value is missing', async () => {
-            expect(parseCsvInput('')).toStrictEqual([]);
-        });
-
-        it('works with some missing values and whitespace', async () => {
-            expect(parseCsvInput(',1 ,, , 2,3,,')).toStrictEqual([
-                '1',
-                '2',
-                '3'
-            ]);
         });
     });
 

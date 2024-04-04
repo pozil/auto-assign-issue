@@ -5,6 +5,31 @@ const parseCsvInput = (valueString) => {
         .filter((item) => item !== '');
 };
 
+const parseAssignments = (valueString) => {
+    const list = parseCsvInput(valueString);
+    const weightedList = [];
+    list.forEach((item) => {
+        const itemValues = item.split(':');
+        const name = itemValues[0];
+        let weight = 1;
+        if (itemValues.length === 2) {
+            try {
+                weight = parseIntInput(itemValues[1]);
+            } catch (e) {
+                throw new Error(
+                    `Invalid weight value for ${name} assignment: ${itemValues[1]}`
+                );
+            }
+        } else if (itemValues.length > 2) {
+            throw new Error(`Invalid assignment value: ${valueString}`);
+        }
+        for (let i = 0; i < weight; i++) {
+            weightedList.push(name);
+        }
+    });
+    return weightedList;
+};
+
 const parseIntInput = (valueString, defaultValue = 0) => {
     let value = defaultValue;
     if (valueString) {
@@ -20,11 +45,13 @@ const pickNRandomFromArray = (arr, n) => {
     if (arr.length === 0) {
         throw new Error('Can not pick random from empty list.');
     }
-    const available = [...arr];
+    let available = [...arr];
     const result = [];
     for (let i = 0; i < n && available.length > 0; i++) {
         const randomIndex = Math.floor(Math.random() * available.length);
-        result.push(available.splice(randomIndex, 1)[0]);
+        const pick = available[randomIndex];
+        result.push(pick);
+        available = available.filter((value) => value !== pick);
     }
     return result;
 };
@@ -133,7 +160,7 @@ const removeAllReviewers = async (octokit, owner, repo, pull_number) => {
 };
 
 module.exports = {
-    parseCsvInput,
+    parseAssignments,
     parseIntInput,
     pickNRandomFromArray,
     getAssignees,

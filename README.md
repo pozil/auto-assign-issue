@@ -4,17 +4,17 @@
 
 ## Inputs
 
-| Parameter                   | Type    | Required                             | Default | Description                                                                                                                                                                                                                                                                                |
-| --------------------------- | ------- | ------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `assignees`                 | String  | only if `teams` is not specified     | n/a     | Comma separated list of user names. Issue will be assigned to those users.                                                                                                                                                                                                                 |
-| `teams`                     | String  | only if `assignees` is not specified | n/a     | Comma separated list of team names without the org prefix. Issue will be assigned to the team members.<br/><br/>**Important Requirement:** if using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough). |
-| `numOfAssignee`             | Number  | false                                | n/a     | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users.                                                                                                                                                                         |
-| `abortIfPreviousAssignees`  | Boolean | false                                | false   | Flag that aborts the action if there were assignees previously.                                                                                                                                                                                                                            |
-| `removePreviousAssignees`   | Boolean | false                                | false   | Flag that removes assignees before assigning them (useful the issue is reasigned).                                                                                                                                                                                                         |
-| `allowNoAssignees`          | Boolean | false                                | false   | Flag that prevents the action from failing when there are no assignees.                                                                                                                                                                                                                    |
-| `allowSelfAssign`           | Boolean | false                                | true    | Flag that allows self-assignment to the issue author.<br/><br/>This flag is ignored when working with PRs as self assigning a PR for review is forbidden by GitHub.                                                                                                                        |
-| `issueNumber`               | Number  | false                                | n/a     | Allows to override the issue number. This can be useful when context is missing.                                                                                                                                                                                                           |
-| `teamIsPullRequestReviewer` | Boolean | false                                | false   | Sets team as the PR reviewer instead of a member of the team.                                                                                                                                                                                                                              |
+| Parameter                   | Type    | Required                             | Default | Description                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------- | ------- | ------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assignees`                 | String  | only if `teams` is not specified     | n/a     | Comma separated list of user names with optional [weights](#working-with-weighted-assignements). Issue will be assigned to those users.                                                                                                                                                                                                                 |
+| `teams`                     | String  | only if `assignees` is not specified | n/a     | Comma separated list of team names without the org prefix with optional [weights](#working-with-weighted-assignements). Issue will be assigned to the team members.<br/><br/>**Important Requirement:** if using the `teams` input parameter, you need to use a personal access token with `read:org` scope (the default `GITHUB_TOKEN` is not enough). |
+| `numOfAssignee`             | Number  | false                                | n/a     | Number of assignees that will be randomly picked from the teams or assignees. If not specified, assigns all users.                                                                                                                                                                                                                                      |
+| `abortIfPreviousAssignees`  | Boolean | false                                | false   | Flag that aborts the action if there were assignees previously.                                                                                                                                                                                                                                                                                         |
+| `removePreviousAssignees`   | Boolean | false                                | false   | Flag that removes assignees before assigning them (useful the issue is reasigned).                                                                                                                                                                                                                                                                      |
+| `allowNoAssignees`          | Boolean | false                                | false   | Flag that prevents the action from failing when there are no assignees.                                                                                                                                                                                                                                                                                 |
+| `allowSelfAssign`           | Boolean | false                                | true    | Flag that allows self-assignment to the issue author.<br/><br/>This flag is ignored when working with PRs as self assigning a PR for review is forbidden by GitHub.                                                                                                                                                                                     |
+| `issueNumber`               | Number  | false                                | n/a     | Allows to override the issue number. This can be useful when context is missing.                                                                                                                                                                                                                                                                        |
+| `teamIsPullRequestReviewer` | Boolean | false                                | false   | Sets team as the PR reviewer instead of a member of the team.                                                                                                                                                                                                                                                                                           |
 
 ## Examples
 
@@ -68,6 +68,30 @@ jobs:
                   teams: support
                   numOfAssignee: 1
 ```
+
+### Working with weighted assignements
+
+When specifying `assignees` or `teams` values, you may provide weights to balance the randomness of the selection.
+The following formats are supported:
+
+```yml
+# No weights specified (same weight for all items)
+assignees: a, b, c
+# Weights specified
+assignees: a:1, b:5, c:2
+# Some weights specified (item weight defaults to 1 when not specified)
+assignees: a, b:2, c
+```
+
+Let's look at a practical example:
+
+```yml
+assignees: octocat:4,cat
+```
+
+-   `octocat` has a weight of `4`.
+-   `cat` has a weight of `1` (default value).
+-   `octocat` has 4 chances out of 5 to be selected.
 
 ### Working with Project Cards
 

@@ -1,15 +1,15 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 const { runAction } = require('./action');
-const { parseIntInput, parseCsvInput } = require('./utils');
+const { parseIntInput, parseAssignments } = require('./utils');
 
 try {
     // Get params
     const gitHubToken = core.getInput('repo-token', { required: true });
-    const assignees = parseCsvInput(
+    const assignees = parseAssignments(
         core.getInput('assignees', { required: false })
     );
-    const teams = parseCsvInput(core.getInput('teams', { required: false }));
+    const teams = parseAssignments(core.getInput('teams', { required: false }));
     let numOfAssignee;
     try {
         numOfAssignee = parseIntInput(

@@ -104,15 +104,9 @@ const runAction = async (octokit, context, parameters) => {
         newAssignees = newAssignees.concat(teamMembers);
     }
 
-    // Remove duplicates from assignees
-    newAssignees = [...new Set(newAssignees)];
-
     // Remove author if allowSelfAssign is false
     if (!allowSelfAssign) {
-        const foundIndex = newAssignees.indexOf(author);
-        if (foundIndex !== -1) {
-            newAssignees.splice(foundIndex, 1);
-        }
+        newAssignees = newAssignees.filter((name) => name !== author);
     }
 
     // Check if there are assignees left
@@ -120,6 +114,9 @@ const runAction = async (octokit, context, parameters) => {
         // Select random assignees
         if (numOfAssignee) {
             newAssignees = pickNRandomFromArray(newAssignees, numOfAssignee);
+        } else {
+            // Remove duplicates from assignees
+            newAssignees = [...new Set(newAssignees)];
         }
 
         // Assign issue
