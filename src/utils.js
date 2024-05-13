@@ -15,6 +15,7 @@ const parseAssignments = (valueString) => {
         if (itemValues.length === 2) {
             try {
                 weight = parseIntInput(itemValues[1]);
+                // eslint-disable-next-line no-unused-vars
             } catch (e) {
                 throw new Error(
                     `Invalid weight value for ${name} assignment: ${itemValues[1]}`
@@ -125,6 +126,7 @@ const isAnIssue = async (octokit, owner, repo, issue_number) => {
             // if the pull_request node comes, it means is non a real issue, it is a PR
             isAnIssue = true;
         }
+        // eslint-disable-next-line no-unused-vars
     } catch (err) {
         // It's the only way to identify if it's an issue, trying to retrieve its data
     }
