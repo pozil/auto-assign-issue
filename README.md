@@ -37,7 +37,7 @@ jobs:
             issues: write
         steps:
             - name: 'Auto-assign issue'
-              uses: pozil/auto-assign-issue@v1
+              uses: pozil/auto-assign-issue@v2
               with:
                   assignees: octocat,cat,dog
                   numOfAssignee: 2
