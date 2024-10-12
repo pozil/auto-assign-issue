@@ -59,7 +59,7 @@ jobs:
     auto-assign:
         runs-on: ubuntu-latest
         permissions:
-            issues: write
+            pull-requests: write
         steps:
             - name: 'Auto-assign PR'
               uses: pozil/auto-assign-issue@v2
