@@ -226,7 +226,7 @@ describe('action', () => {
         });
 
         it('fails if user cannot be assigned and failsIfUsersCannotBeAssigned flag is true', async () => {
-            const requestMock = jest.fn(() => Promise.resolve({ status: 404 }));
+            const requestMock = jest.fn(() => Promise.reject({ status: 404 }));
             const octokitMock = getOctokitMock({ requestMock });
 
             await expect(

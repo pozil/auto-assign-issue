@@ -184,11 +184,11 @@ const checkIfUsersCanBeAssigned = async (
         );
         requests.push(request);
     }
-    const responses = await Promise.all(requests);
+    const responses = await Promise.allSettled(requests);
     const result = { isSuccess: true, assigneeErrors: [] };
     for (let i = 0; i < assignees.length; i++) {
         const { status } = responses[i];
-        if (status != 204) {
+        if (status === 'rejected') {
             result.isSuccess = false;
             result.assigneeErrors.push(assignees[i]);
         }
