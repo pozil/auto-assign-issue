@@ -122,7 +122,7 @@ const isAnIssue = async (octokit, owner, repo, issue_number) => {
             issue_number
         });
         // In private repos, an exception is raised. In public ones, extra info comes.
-        if (!issue?.data?.pull_request) {
+        if (!issue?.data?.pull_request && !issue?.data?.pull_request_target) {
             // if the pull_request node comes, it means is non a real issue, it is a PR
             isAnIssue = true;
         }

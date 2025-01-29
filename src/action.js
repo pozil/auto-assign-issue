@@ -48,10 +48,12 @@ const runAction = async (octokit, context, parameters) => {
     let isIssue =
         typeof context.issue !== 'undefined' &&
         typeof context.pull_request === 'undefined' &&
+        typeof context.pull_request_target === 'undefined' &&
         context.workflow_run?.pull_requests?.length === undefined;
     const author =
         context.issue?.user.login ||
         context.pull_request?.user.login ||
+        context.pull_request_target?.user.login ||
         context.workflow_run?.actor.login;
     const [owner, repo] = context.repository.full_name.split('/');
 
@@ -61,6 +63,7 @@ const runAction = async (octokit, context, parameters) => {
         issueNumber =
             context.issue?.number ||
             context.pull_request?.number ||
+            context.pull_request_target?.number ||
             context.workflow_run?.pull_requests[0]?.number;
     }
 
