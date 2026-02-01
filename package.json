@@ -39,7 +39,7 @@
     },
     "homepage": "https://github.com/pozil/auto-assign-issue#readme",
     "dependencies": {
-        "@actions/core": "^1.11.1",
+        "@actions/core": "^3.0.0",
         "@actions/github": "^6.0.1"
     },
     "devDependencies": {
