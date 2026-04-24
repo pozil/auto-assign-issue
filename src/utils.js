@@ -196,7 +196,7 @@ const checkIfUsersCanBeAssigned = async (
     return result;
 };
 
-module.exports = {
+export {
     parseAssignments,
     parseIntInput,
     pickNRandomFromArray,

@@ -1,15 +1,16 @@
 {
     "name": "auto-assign-issue",
-    "version": "2.2.1",
+    "version": "3.0.0",
     "private": true,
     "description": "GitHub action that auto-assigns issues to users",
+    "type": "module",
     "main": "src/index.js",
     "scripts": {
         "lint": "eslint src/**",
         "prettier": "prettier --write \"**/*.{html,js,json,md,yaml,yml}\"",
         "prettier:verify": "prettier --check \"**/*.{html,js,json,md,yaml,yml}\"",
-        "test": "jest",
-        "test:coverage": "jest --coverage",
+        "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+        "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
         "prepare": "husky || true",
         "precommit": "lint-staged"
     },
@@ -19,7 +20,7 @@
         ],
         "./src/**/*.js": [
             "eslint",
-            "jest --bail --findRelatedTests --passWithNoTests"
+            "cross-env NODE_OPTIONS=--experimental-vm-modules jest --bail --findRelatedTests --passWithNoTests"
         ]
     },
     "repository": {
@@ -44,17 +45,18 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@typescript-eslint/utils": "^8.59.0",
+        "cross-env": "^10.1.0",
         "eslint": "^10.2.1",
         "eslint-plugin-jest": "^29.15.2",
         "globals": "^17.5.0",
         "husky": "^9.1.7",
         "jest": "^30.3.0",
         "lint-staged": "^16.4.0",
-        "prettier": "^3.8.3",
-        "@typescript-eslint/utils": "^8.59.0"
+        "prettier": "^3.8.3"
     },
     "engines": {
-        "node": ">=20"
+        "node": ">=24"
     },
     "volta": {
         "node": "24.15.0"

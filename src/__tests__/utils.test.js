@@ -1,9 +1,10 @@
-const {
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import {
     parseAssignments,
     parseIntInput,
     pickNRandomFromArray,
     getTeamMembers
-} = require('../utils.js');
+} from '../utils.js';
 
 const TEAM_MEMBERS = {
     teamA: { data: [{ login: 'userA1' }, { login: 'userA2' }] },

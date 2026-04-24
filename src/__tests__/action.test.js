@@ -1,12 +1,13 @@
-const { runAction } = require('../action.js');
-const {
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+import { runAction } from '../action.js';
+import {
     getOctokitMock,
     defaultRemoveIssueAssigneesMock,
     defaultAddIssueAssigneesMock,
     defaultGetIssueMock,
     defaultAddPRReviewersMock,
     defaultListTeamMembersMock
-} = require('./utils/octokitMock.js');
+} from './utils/octokitMock.js';
 
 const TEAM_MEMBERS = {
     teamA: { data: [{ login: 'userA1' }, { login: 'userA2' }] },

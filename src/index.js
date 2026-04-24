@@ -1,7 +1,7 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const { runAction } = require('./action');
-const { parseIntInput, parseAssignments } = require('./utils');
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { runAction } from './action.js';
+import { parseIntInput, parseAssignments } from './utils.js';
 
 try {
     // Get params

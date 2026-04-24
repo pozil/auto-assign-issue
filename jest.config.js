@@ -1,3 +1,5 @@
-module.exports = {
-    testRegex: '/__tests__/.*.test.js$'
+export default {
+    testRegex: '/__tests__/.*.test.js$',
+    testEnvironment: 'node',
+    transform: {}
 };

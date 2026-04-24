@@ -1,4 +1,4 @@
-const {
+import {
     pickNRandomFromArray,
     getAssignees,
     getTeamMembers,
@@ -6,7 +6,7 @@ const {
     isAnIssue,
     removeAllReviewers,
     checkIfUsersCanBeAssigned
-} = require('./utils');
+} from './utils.js';
 
 /**
  * Runs the auto-assign issue action
@@ -197,6 +197,4 @@ const runAction = async (octokit, context, parameters) => {
     }
 };
 
-module.exports = {
-    runAction
-};
+export { runAction };

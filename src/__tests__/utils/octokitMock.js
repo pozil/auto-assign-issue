@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 const defaultGetIssueMock = jest.fn(() =>
     Promise.resolve({
         data: { assignees: [{ login: 'userA' }, { login: 'userB' }] }
@@ -38,7 +40,7 @@ const getOctokitMock = (mockOverrides) => ({
     request: mockOverrides?.requestMock ?? defaultRequestMock
 });
 
-module.exports = {
+export {
     getOctokitMock,
     defaultGetIssueMock,
     defaultGetPRMock,
