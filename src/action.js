@@ -25,13 +25,13 @@ import {
  * @param {boolean} parameters.failsIfUsersCannotBeAssigned
  */
 const runAction = async (octokit, context, parameters) => {
+    let { allowNoAssignees = false } = parameters;
     const {
         assignees = [],
         teams = [],
         numOfAssignee = 0,
         abortIfPreviousAssignees = false,
         removePreviousAssignees = false,
-        allowNoAssignees = false,
         allowSelfAssign = true,
         manualIssueNumber = 0,
         teamIsPullRequestReviewer = false,
@@ -43,6 +43,11 @@ const runAction = async (octokit, context, parameters) => {
         throw new Error(
             'Missing required parameters: you must provide assignees or teams'
         );
+    }
+
+    // Allow no assignees if working with teams as PR reviewer
+    if (teamIsPullRequestReviewer) {
+        allowNoAssignees = true;
     }
 
     let isIssue =
@@ -105,7 +110,7 @@ const runAction = async (octokit, context, parameters) => {
     let newAssignees = assignees;
 
     // Get assignee team members
-    if (teams.length > 0) {
+    if (!teamIsPullRequestReviewer && teams.length > 0) {
         const teamMembers = await getTeamMembers(octokit, owner, teams);
         newAssignees = newAssignees.concat(teamMembers);
     }
@@ -170,7 +175,7 @@ const runAction = async (octokit, context, parameters) => {
                 owner,
                 repo,
                 pull_number: issueNumber,
-                reviewers: teams
+                team_reviewers: teams
             });
         } else {
             // Remove author from reviewers

@@ -308,21 +308,19 @@ describe('action', () => {
             });
         });
 
-        it('works with team reviewer for pull request', async () => {
-            const octokitMock = getOctokitMock({ listTeamMembersMock });
-
-            await runAction(octokitMock, PR_CONTEXT_PAYLOAD, {
+        it('works with team reviewers for pull request', async () => {
+            await runAction(getOctokitMock(), PR_CONTEXT_PAYLOAD, {
                 teams: ['teamA'],
                 teamIsPullRequestReviewer: true
             });
 
-            expect(listTeamMembersMock).toHaveBeenCalled();
-            expect(defaultAddIssueAssigneesMock).toHaveBeenCalledTimes(1);
-            expect(defaultAddIssueAssigneesMock).toHaveBeenCalledWith({
-                assignees: ['userA1', 'userA2'],
-                issue_number: PR_CONTEXT_PAYLOAD.pull_request.number,
+            expect(defaultAddIssueAssigneesMock).not.toHaveBeenCalled();
+            expect(defaultAddPRReviewersMock).toHaveBeenCalledTimes(1);
+            expect(defaultAddPRReviewersMock).toHaveBeenCalledWith({
                 owner: 'mockOrg',
-                repo: 'mockRepo'
+                repo: 'mockRepo',
+                pull_number: PR_CONTEXT_PAYLOAD.pull_request.number,
+                team_reviewers: ['teamA']
             });
         });
 
