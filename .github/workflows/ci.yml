@@ -9,13 +9,15 @@ on:
 jobs:
     format-lint-test:
         runs-on: ubuntu-latest
+        permissions:
+            id-token: write
         steps:
             - name: 'Checkout source code'
-              uses: actions/checkout@v3
+              uses: actions/checkout@v6
 
             - name: 'Restore node_modules cache'
               id: cache-npm
-              uses: actions/cache@v3
+              uses: actions/cache@v5
               with:
                   path: node_modules
                   key: npm-${{ hashFiles('**/package-lock.json') }}
@@ -37,6 +39,7 @@ jobs:
               run: npm run test:coverage
 
             - name: 'Upload code coverage to Codecov.io'
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v6
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
+                  use_oidc: true
+                  fail_ci_if_error: false
