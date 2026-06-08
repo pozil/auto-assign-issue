@@ -38,6 +38,12 @@ jobs:
             - name: 'Unit test'
               run: npm run test:coverage
 
+            - name: 'Build'
+              run: npm run build
+
+            - name: 'Verify generated dist'
+              run: git diff --exit-code dist
+
             - name: 'Upload code coverage to Codecov.io'
               uses: codecov/codecov-action@v6
               with:
