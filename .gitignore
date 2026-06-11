@@ -15,3 +15,7 @@ $RECYCLE.BIN/
 
 # Code coverage reports
 /coverage
+
+# Unrelated tools configuration
+.sfdx
+.sf

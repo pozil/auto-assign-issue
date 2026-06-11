@@ -38,7 +38,7 @@ jobs:
             issues: write
         steps:
             - name: 'Auto-assign issue'
-              uses: pozil/auto-assign-issue@v2
+              uses: pozil/auto-assign-issue@v4
               with:
                   assignees: octocat,cat,dog
                   numOfAssignee: 2
@@ -63,7 +63,7 @@ jobs:
             pull-requests: write
         steps:
             - name: 'Auto-assign PR'
-              uses: pozil/auto-assign-issue@v2
+              uses: pozil/auto-assign-issue@v4
               with:
                   repo-token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
                   teams: support
@@ -117,7 +117,7 @@ jobs:
             issues: write
         steps:
             - name: 'Auto-assign card'
-              uses: pozil/auto-assign-issue@v2
+              uses: pozil/auto-assign-issue@v4
               with:
                   repo-token: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
                   teams: triage
