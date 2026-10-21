@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-// NOTE: These definitions support Node.js and TypeScript 5.2 through 5.6.
+// NOTE: These definitions support Node.js and TypeScript 5.6.
 
 // Reference required TypeScript libraries:
 /// <reference lib="es2020" />
@@ -30,9 +30,6 @@
 
 // TypeScript library polyfills required for TypeScript <=5.6:
 /// <reference path="./compatibility/float16array.d.ts" />
-
-// Iterator definitions required for compatibility with TypeScript <5.6:
-/// <reference path="../compatibility/iterators.d.ts" />
 
 // Definitions for Node.js modules specific to TypeScript <=5.6:
 /// <reference path="./globals.typedarray.d.ts" />
@@ -71,6 +68,7 @@
 /// <reference path="../dns/promises.d.ts" />
 /// <reference path="../domain.d.ts" />
 /// <reference path="../events.d.ts" />
+/// <reference path="../ffi.d.ts" />
 /// <reference path="../fs.d.ts" />
 /// <reference path="../fs/promises.d.ts" />
 /// <reference path="../http.d.ts" />
@@ -112,6 +110,7 @@
 /// <reference path="../util.d.ts" />
 /// <reference path="../util/types.d.ts" />
 /// <reference path="../v8.d.ts" />
+/// <reference path="../vfs.d.ts" />
 /// <reference path="../vm.d.ts" />
 /// <reference path="../wasi.d.ts" />
 /// <reference path="../worker_threads.d.ts" />

@@ -1,8 +1,8 @@
 import { formatWithOptions } from 'node:util'
 
-import { dim, SUPPORTS_COLOR } from './colors.js'
+import { COLORS_ENABLED, dim } from './colors.js'
 
-const format = (...args) => formatWithOptions({ colors: SUPPORTS_COLOR }, ...args)
+const format = (...args) => formatWithOptions({ colors: COLORS_ENABLED }, ...args)
 
 let activeLogger
 

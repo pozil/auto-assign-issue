@@ -36,7 +36,10 @@ export class BodyMixin {
   readonly bytes: () => Promise<Uint8Array>
   /**
    * @deprecated This method is not recommended for parsing multipart/form-data bodies in server environments.
-   * It is recommended to use a library such as [@fastify/busboy](https://www.npmjs.com/package/@fastify/busboy) as follows:
+   * Calling body.formData() buffers and parses the entire body. Since this is dictated by the spec,
+   * this method must only be called on responses from trusted servers.
+   * For responses from untrusted or user-controlled servers, use a dedicated streaming parser such as
+   * [@fastify/busboy](https://www.npmjs.com/package/@fastify/busboy) and apply application-specific limits as follows:
    *
    * @example
    * ```js
@@ -54,18 +57,39 @@ export class BodyMixin {
   readonly formData: () => Promise<FormData>
   readonly json: () => Promise<unknown>
   readonly text: () => Promise<string>
+  readonly textStream: () => ReadableStream<string>
 }
 
 export interface SpecIterator<T, TReturn = any, TNext = undefined> {
   next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
 }
 
-export interface SpecIterableIterator<T> extends SpecIterator<T> {
+export interface SpecIteratorObject<T, TReturn = undefined, TNext = unknown> extends SpecIterator<T, TReturn, TNext> {
+  [Symbol.iterator](): SpecIteratorObject<T, TReturn, TNext>;
+  map<U>(callbackfn: (value: T, index: number) => U): SpecIteratorObject<U>;
+  filter<S extends T>(predicate: (value: T, index: number) => value is S): SpecIteratorObject<S>;
+  filter(predicate: (value: T, index: number) => unknown): SpecIteratorObject<T>;
+  take(limit: number): SpecIteratorObject<T>;
+  drop(count: number): SpecIteratorObject<T>;
+  flatMap<U>(callbackfn: (value: T, index: number) => Iterator<U> | Iterable<U>): SpecIteratorObject<U>;
+  reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number) => T): T;
+  reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number) => T, initialValue: T): T;
+  reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number) => U, initialValue: U): U;
+  toArray(): T[];
+  forEach(callbackfn: (value: T, index: number) => void): void;
+  some(predicate: (value: T, index: number) => unknown): boolean;
+  every(predicate: (value: T, index: number) => unknown): boolean;
+  find<S extends T>(predicate: (value: T, index: number) => value is S): S | undefined;
+  find(predicate: (value: T, index: number) => unknown): T | undefined;
+  readonly [Symbol.toStringTag]: string;
+}
+
+export interface SpecIterableIterator<T> extends SpecIteratorObject<T> {
   [Symbol.iterator](): SpecIterableIterator<T>;
 }
 
 export interface SpecIterable<T> {
-  [Symbol.iterator](): SpecIterator<T>;
+  [Symbol.iterator](): SpecIterableIterator<T>;
 }
 
 export type HeadersInit = [string, string][] | HeaderRecord | Headers
@@ -173,7 +197,7 @@ export declare class Request extends BodyMixin {
   readonly signal: AbortSignal
   readonly duplex: RequestDuplex
 
-  readonly clone: () => Request
+  public clone (): Request
 }
 
 export interface ResponseInit {
@@ -203,7 +227,7 @@ export declare class Response extends BodyMixin {
   readonly url: string
   readonly redirected: boolean
 
-  readonly clone: () => Response
+  public clone (): Response
 
   static error (): Response
   static json (data: any, init?: ResponseInit): Response

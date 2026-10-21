@@ -1,5 +1,5 @@
 declare module "node:fs" {
-    import { NonSharedBuffer } from "node:buffer";
+    import { BufferView, NonSharedBuffer } from "node:buffer";
     import { Abortable, EventEmitter, InternalEventEmitter } from "node:events";
     import { FileHandle } from "node:fs/promises";
     import * as stream from "node:stream";
@@ -48,6 +48,13 @@ declare module "node:fs" {
         mtime: Date;
         ctime: Date;
         birthtime: Date;
+        // Deliberately not defining a type alias here... it'd be exported, and something in the ecosystem would inevitably start using it.
+        // TODO: replace with Temporal builtins once @types/node no longer supports TS <6.0.
+        atimeInstant: typeof globalThis extends { Temporal: { Instant: new(...args: any[]) => infer T } } ? T : unknown;
+        mtimeInstant: typeof globalThis extends { Temporal: { Instant: new(...args: any[]) => infer T } } ? T : unknown;
+        ctimeInstant: typeof globalThis extends { Temporal: { Instant: new(...args: any[]) => infer T } } ? T : unknown;
+        birthtimeInstant: typeof globalThis extends { Temporal: { Instant: new(...args: any[]) => infer T } } ? T
+            : unknown;
     }
     interface Stats extends StatsBase<number> {}
     /**
@@ -126,6 +133,8 @@ declare module "node:fs" {
         bavail: T;
         /** Total file nodes in file system. */
         files: T;
+        /** Fundamental file system block size. */
+        frsize: T;
         /** Free file nodes in file system. */
         ffree: T;
     }
@@ -2916,12 +2925,6 @@ declare module "node:fs" {
     interface ReadOptionsWithBuffer<T extends NodeJS.ArrayBufferView> extends ReadOptions {
         buffer?: T | undefined;
     }
-    /** @deprecated Use `ReadOptions` instead. */
-    // TODO: remove in future major
-    interface ReadSyncOptions extends ReadOptions {}
-    /** @deprecated Use `ReadOptionsWithBuffer` instead. */
-    // TODO: remove in future major
-    interface ReadAsyncOptions<T extends NodeJS.ArrayBufferView> extends ReadOptionsWithBuffer<T> {}
     /**
      * Read data from the file specified by `fd`.
      *
@@ -3026,6 +3029,19 @@ declare module "node:fs" {
      * If no `options` object is specified, it will default with the above values.
      */
     function readSync(fd: number, buffer: NodeJS.ArrayBufferView, opts?: ReadOptions): number;
+    interface ReadFileOptions extends Abortable {
+        encoding?: BufferEncoding | null | undefined;
+        flag?: OpenMode | undefined;
+    }
+    interface ReadFileOptionsWithStringEncoding extends ReadFileOptions {
+        encoding: BufferEncoding;
+    }
+    interface ReadFileOptionsWithBufferEncoding extends ReadFileOptions {
+        encoding?: null | undefined;
+    }
+    interface ReadFileOptionsWithBuffer<T extends NodeJS.ArrayBufferView> extends ReadFileOptionsWithBufferEncoding {
+        buffer: T | ((size: number) => T);
+    }
     /**
      * Asynchronously reads the entire contents of a file.
      *
@@ -3043,6 +3059,11 @@ declare module "node:fs" {
      *
      * If no encoding is specified, then the raw buffer is returned.
      *
+     * If `buffer` is provided and no encoding is specified, the returned `Buffer` is
+     * a view over the supplied buffer containing only the bytes read. If the
+     * supplied buffer is too small to contain the entire file, the callback is
+     * called with an error.
+     *
      * If `options` is a string, then it specifies the encoding:
      *
      * ```js
@@ -3051,7 +3072,8 @@ declare module "node:fs" {
      * readFile('/etc/passwd', 'utf8', callback);
      * ```
      *
-     * When the path is a directory, the behavior of `fs.readFile()` and {@link readFileSync} is platform-specific. On macOS, Linux, and Windows, an
+     * When the path is a directory, the behavior of `fs.readFile()` and
+     * `fs.readFileSync()` is platform-specific. On macOS, Linux, and Windows, an
      * error will be returned. On FreeBSD, a representation of the directory's contents
      * will be returned.
      *
@@ -3089,60 +3111,56 @@ declare module "node:fs" {
      *
      * Aborting an ongoing request does not abort individual operating
      * system requests but rather the internal buffering `fs.readFile` performs.
+     *
+     * An example using the `buffer` option with a pre-allocated buffer:
+     *
+     * ```js
+     * import { Buffer } from 'node:buffer';
+     * import { readFile } from 'node:fs';
+     *
+     * const buf = Buffer.alloc(16384);
+     * readFile('/path/to/file', { buffer: buf }, (err, data) => {
+     *   if (err) throw err;
+     *   console.log(data); // A view over `buf` containing only the bytes read
+     * });
+     * ```
+     *
+     * An example using the `buffer` option with a function returning a buffer:
+     *
+     * ```js
+     * import { Buffer } from 'node:buffer';
+     * import { readFile } from 'node:fs';
+     *
+     * readFile('/path/to/file', {
+     *   buffer: (size) => Buffer.alloc(size),
+     * }, (err, data) => {
+     *   if (err) throw err;
+     *   console.log(data);
+     * });
+     * ```
      * @since v0.1.29
      * @param path filename or file descriptor
      */
+    function readFile<T extends NodeJS.ArrayBufferView>(
+        path: PathOrFileDescriptor,
+        options: ReadFileOptionsWithBuffer<T>,
+        callback: (err: NodeJS.ErrnoException | null, data: BufferView<T>) => void,
+    ): void;
     function readFile(
         path: PathOrFileDescriptor,
-        options:
-            | ({
-                encoding?: null | undefined;
-                flag?: string | undefined;
-            } & Abortable)
-            | undefined
-            | null,
+        options: ReadFileOptionsWithBufferEncoding | null | undefined,
         callback: (err: NodeJS.ErrnoException | null, data: NonSharedBuffer) => void,
     ): void;
-    /**
-     * Asynchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
-     * If a flag is not provided, it defaults to `'r'`.
-     */
     function readFile(
         path: PathOrFileDescriptor,
-        options:
-            | ({
-                encoding: BufferEncoding;
-                flag?: string | undefined;
-            } & Abortable)
-            | BufferEncoding,
+        options: ReadFileOptionsWithStringEncoding | BufferEncoding,
         callback: (err: NodeJS.ErrnoException | null, data: string) => void,
     ): void;
-    /**
-     * Asynchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
-     * If a flag is not provided, it defaults to `'r'`.
-     */
     function readFile(
         path: PathOrFileDescriptor,
-        options:
-            | (ObjectEncodingOptions & {
-                flag?: string | undefined;
-            } & Abortable)
-            | BufferEncoding
-            | undefined
-            | null,
+        options: ReadFileOptions | BufferEncoding | null | undefined,
         callback: (err: NodeJS.ErrnoException | null, data: string | NonSharedBuffer) => void,
     ): void;
-    /**
-     * Asynchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     */
     function readFile(
         path: PathOrFileDescriptor,
         callback: (err: NodeJS.ErrnoException | null, data: NonSharedBuffer) => void,
@@ -3197,16 +3215,37 @@ declare module "node:fs" {
                 | null,
         ): Promise<string | NonSharedBuffer>;
     }
+    interface ReadFileSyncOptions {
+        encoding?: BufferEncoding | null | undefined;
+        flag?: OpenMode | undefined;
+    }
+    interface ReadFileSyncOptionsWithStringEncoding extends ReadFileSyncOptions {
+        encoding: BufferEncoding;
+    }
+    interface ReadFileSyncOptionsWithBufferEncoding extends ReadFileSyncOptions {
+        encoding?: null | undefined;
+    }
+    interface ReadFileSyncOptionsWithBuffer<T extends NodeJS.ArrayBufferView>
+        extends ReadFileSyncOptionsWithBufferEncoding
+    {
+        buffer: T | ((size: number) => T);
+    }
     /**
      * Returns the contents of the `path`.
      *
      * For detailed information, see the documentation of the asynchronous version of
-     * this API: {@link readFile}.
+     * this API: `fs.readFile()`.
      *
      * If the `encoding` option is specified then this function returns a
      * string. Otherwise it returns a buffer.
      *
-     * Similar to {@link readFile}, when the path is a directory, the behavior of `fs.readFileSync()` is platform-specific.
+     * If `buffer` is provided and no encoding is specified, the returned {Buffer} is
+     * a view over the supplied buffer containing only the bytes read. If the
+     * supplied buffer is too small to contain the entire file, an error will be
+     * thrown.
+     *
+     * Similar to `fs.readFile()`, when the path is a directory, the behavior of
+     * `fs.readFileSync()` is platform-specific.
      *
      * ```js
      * import { readFileSync } from 'node:fs';
@@ -3221,45 +3260,19 @@ declare module "node:fs" {
      * @since v0.1.8
      * @param path filename or file descriptor
      */
+    function readFileSync<T extends NodeJS.ArrayBufferView>(
+        path: PathOrFileDescriptor,
+        options: ReadFileSyncOptionsWithBuffer<T>,
+    ): BufferView<T>;
     function readFileSync(
         path: PathOrFileDescriptor,
-        options?: {
-            encoding?: null | undefined;
-            flag?: string | undefined;
-        } | null,
+        options?: ReadFileSyncOptionsWithBufferEncoding | null,
     ): NonSharedBuffer;
-    /**
-     * Synchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
-     * If a flag is not provided, it defaults to `'r'`.
-     */
     function readFileSync(
         path: PathOrFileDescriptor,
-        options:
-            | {
-                encoding: BufferEncoding;
-                flag?: string | undefined;
-            }
-            | BufferEncoding,
+        options: ReadFileSyncOptionsWithStringEncoding | BufferEncoding,
     ): string;
-    /**
-     * Synchronously reads the entire contents of a file.
-     * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
-     * If a file descriptor is provided, the underlying file will _not_ be closed automatically.
-     * @param options Either the encoding for the result, or an object that contains the encoding and an optional flag.
-     * If a flag is not provided, it defaults to `'r'`.
-     */
-    function readFileSync(
-        path: PathOrFileDescriptor,
-        options?:
-            | (ObjectEncodingOptions & {
-                flag?: string | undefined;
-            })
-            | BufferEncoding
-            | null,
-    ): string | NonSharedBuffer;
+    function readFileSync(path: PathOrFileDescriptor, options: ReadFileSyncOptions): string | NonSharedBuffer;
     type WriteFileOptions =
         | (
             & ObjectEncodingOptions
@@ -4582,6 +4595,7 @@ declare module "node:fs" {
         bigint: true;
     }
     interface StatOptions {
+        // TODO: add signal option once we sort its behavior out upstream
         bigint?: boolean | undefined;
         throwIfNoEntry?: boolean | undefined;
     }
@@ -4675,20 +4689,12 @@ declare module "node:fs" {
      * @param dest destination path to copy to.
      */
     function cpSync(source: string | URL, destination: string | URL, opts?: CopySyncOptions): void;
-
-    // TODO: collapse
-    interface _GlobOptions<T extends Dirent | string> {
+    interface GlobOptions<T extends Dirent | string = Dirent | string> {
         /**
          * Current working directory.
          * @default process.cwd()
          */
         cwd?: string | URL | undefined;
-        /**
-         * `true` if the glob should return paths as `Dirent`s, `false` otherwise.
-         * @default false
-         * @since v22.2.0
-         */
-        withFileTypes?: boolean | undefined;
         /**
          * Function to filter out files/directories or a
          * list of glob patterns to be excluded. If a function is provided, return
@@ -4699,17 +4705,31 @@ declare module "node:fs" {
          * @default undefined
          */
         exclude?: ((fileName: T) => boolean) | readonly string[] | undefined;
+        /**
+         * When `true`, symbolic links to directories are
+         * followed while expanding `**` patterns.
+         * @default false
+         */
+        followSymlinks?: boolean | undefined;
+        /**
+         * `true` if the glob should return paths as `Dirent`s, `false` otherwise.
+         * @default false
+         * @since v22.2.0
+         */
+        withFileTypes?: boolean | undefined;
     }
-    interface GlobOptions extends _GlobOptions<Dirent | string> {}
-    interface GlobOptionsWithFileTypes extends _GlobOptions<Dirent> {
+    interface GlobOptionsWithFileTypes extends GlobOptions<Dirent> {
         withFileTypes: true;
     }
-    interface GlobOptionsWithoutFileTypes extends _GlobOptions<string> {
+    interface GlobOptionsWithoutFileTypes extends GlobOptions<string> {
         withFileTypes?: false | undefined;
     }
 
     /**
      * Retrieves the files matching the specified pattern.
+     *
+     * When `followSymlinks` is enabled, detected symbolic link cycles are not
+     * traversed recursively.
      *
      * ```js
      * import { glob } from 'node:fs';
@@ -4750,6 +4770,9 @@ declare module "node:fs" {
         ) => void,
     ): void;
     /**
+     * When `followSymlinks` is enabled, detected symbolic link cycles are not
+     * traversed recursively.
+     *
      * ```js
      * import { globSync } from 'node:fs';
      *
