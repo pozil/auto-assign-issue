@@ -1,6 +1,6 @@
 /**
- * Handle logging of listr `ctx.output` to the specified `logger`
- * @param {Object} ctx - The listr initial state
+ * Handle logging of task `ctx.output` to the specified `logger`
+ * @param {Object} ctx - The context
  * @param {Object} logger - The logger
  */
 export const printTaskOutput = (ctx = {}, logger) => {

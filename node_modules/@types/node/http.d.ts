@@ -175,6 +175,7 @@ declare module "node:http" {
         headers?: OutgoingHttpHeaders | readonly string[] | undefined;
         host?: string | null | undefined;
         hostname?: string | null | undefined;
+        httpValidation?: "strict" | "relaxed" | "insecure" | undefined;
         insecureHTTPParser?: boolean | undefined;
         localAddress?: string | undefined;
         localPort?: number | undefined;
@@ -224,7 +225,7 @@ declare module "node:http" {
          * The number of milliseconds of inactivity a server needs to wait for additional incoming data,
          * after it has finished writing the last response, before a socket will be destroyed.
          * @see Server.keepAliveTimeout for more information.
-         * @default 5000
+         * @default 65000
          * @since v18.0.0
          */
         keepAliveTimeout?: number | undefined;
@@ -255,6 +256,21 @@ declare module "node:http" {
          */
         highWaterMark?: number | undefined;
         /**
+         * Controls HTTP header value validation strictness
+         * for incoming requests. Accepted values are:
+         * * `'strict'`: Strictest validation; rejects any non-ASCII or control
+         *   characters in header values.
+         * * `'relaxed'`: Allows a limited set of non-ASCII characters in header
+         *   values, aligning with the
+         *   [Fetch specification](https://fetch.spec.whatwg.org/).
+         * * `'insecure'`: Disables all header value validation (equivalent to
+         *   `insecureHTTPParser: true`).
+         *
+         * Cannot be used together with `insecureHTTPParser`. **Default:** `'strict'`.
+         * @since v26.3.0
+         */
+        httpValidation?: "strict" | "relaxed" | "insecure" | undefined;
+        /**
          * Use an insecure HTTP parser that accepts invalid HTTP headers when `true`.
          * Using the insecure parser should be avoided.
          * See --insecure-http-parser for more information.
@@ -283,7 +299,7 @@ declare module "node:http" {
         requireHostHeader?: boolean | undefined;
         /**
          * If set to `true`, it enables keep-alive functionality on the socket immediately after a new incoming connection is received,
-         * similarly on what is done in `socket.setKeepAlive([enable][, initialDelay])`.
+         * similarly on what is done in `socket.setKeepAlive()`.
          * @default false
          * @since v16.5.0
          */
@@ -341,7 +357,7 @@ declare module "node:http" {
         "connection": [socket: net.Socket];
         "dropRequest": [request: InstanceType<Request>, socket: stream.Duplex];
         "request": Parameters<RequestListener<Request, Response>>;
-        "upgrade": [req: InstanceType<Request>, socket: stream.Duplex, head: NonSharedBuffer];
+        "upgrade": [req: InstanceType<Request>, stream: stream.Duplex, head: NonSharedBuffer];
     }
     /**
      * @since v0.1.17
@@ -923,6 +939,36 @@ declare module "node:http" {
         ): this;
         writeHead(statusCode: number, headers?: OutgoingHttpHeaders | OutgoingHttpHeader[]): this;
         /**
+         * Sends an arbitrary HTTP/1.1 1xx informational response to the client. This
+         * is a generic equivalent of `response.writeContinue()`,
+         * `response.writeProcessing()` and `response.writeEarlyHints()`, and
+         * can be called multiple times before the final response. After the final
+         * response headers have been sent (via `response.writeHead()` or an
+         * implicit header), calling this method throws `ERR_HTTP_HEADERS_SENT`.
+         *
+         * Clients receive these responses via the [`'information'`](https://nodejs.org/docs/latest-v26.x/api/http.html#event-information)
+         * event on `http.ClientRequest`.
+         *
+         * ```js
+         * response.writeInformation(110, { 'X-Progress': '50%' });
+         * ```
+         * @since v26.2.0
+         * @param statusCode An HTTP 1xx informational status code, between `100`
+         * and `199` inclusive, excluding `101` (Switching Protocols) which is only
+         * available through the [`'upgrade'`](https://nodejs.org/docs/latest-v26.x/api/http.html#event-upgrade) event.
+         * @param headers An optional set of headers to send with the
+         * informational response. Accepts the same shapes as
+         * `response.writeHead()`.
+         * @param callback Optional, called once the message has been written
+         * to the socket.
+         */
+        writeInformation(
+            statusCode: number,
+            headers?: OutgoingHttpHeaders | readonly string[],
+            callback?: () => void,
+        ): void;
+        writeInformation(statusCode: number, callback: () => void): void;
+        /**
          * Sends a HTTP/1.1 102 Processing message to the client, indicating that
          * the request body should be sent.
          * @since v10.0.0
@@ -947,7 +993,7 @@ declare module "node:http" {
         "response": [response: IncomingMessage];
         "socket": [socket: net.Socket];
         "timeout": [];
-        "upgrade": [response: IncomingMessage, socket: net.Socket, head: NonSharedBuffer];
+        "upgrade": [response: IncomingMessage, stream: net.Socket, head: NonSharedBuffer];
     }
     /**
      * This object is created internally and returned from {@link request}. It
@@ -1326,6 +1372,31 @@ declare module "node:http" {
          */
         setTimeout(msecs: number, callback?: () => void): this;
         /**
+         * An `AbortSignal` that is aborted when the underlying socket closes or the
+         * request is destroyed. The signal is created lazily on first access — no
+         * `AbortController` is allocated for requests that never use this property.
+         *
+         * This is useful for cancelling downstream asynchronous work such as database
+         * queries or `fetch` calls when a client disconnects mid-request.
+         *
+         * ```js
+         * import http from 'node:http';
+         *
+         * http.createServer(async (req, res) => {
+         *   try {
+         *     const data = await fetch('https://example.com/api', { signal: req.signal });
+         *     res.end(JSON.stringify(await data.json()));
+         *   } catch (err) {
+         *     if (err.name === 'AbortError') return;
+         *     res.statusCode = 500;
+         *     res.end('Internal Server Error');
+         *   }
+         * }).listen(3000);
+         * ```
+         * @since v26.1.0
+         */
+        readonly signal: AbortSignal;
+        /**
          * **Only valid for request obtained from {@link Server}.**
          *
          * The request method as a string. Read only. Examples: `'GET'`, `'DELETE'`.
@@ -1502,7 +1573,7 @@ declare module "node:http" {
         scheduling?: "fifo" | "lifo" | undefined;
         /**
          * Environment variables for proxy configuration. See
-         * [Built-in Proxy Support](https://nodejs.org/docs/latest-v25.x/api/http.html#built-in-proxy-support) for details.
+         * [Built-in Proxy Support](https://nodejs.org/docs/latest-v26.x/api/http.html#built-in-proxy-support) for details.
          * @since v24.5.0
          */
         proxyEnv?: ProxyEnv | undefined;
@@ -1571,7 +1642,7 @@ declare module "node:http" {
      * });
      * ```
      *
-     * `options` in [`socket.connect()`](https://nodejs.org/docs/latest-v25.x/api/net.html#socketconnectoptions-connectlistener) are also supported.
+     * `options` in [`socket.connect()`](https://nodejs.org/docs/latest-v26.x/api/net.html#socketconnectoptions-connectlistener) are also supported.
      *
      * To configure any of them, a custom {@link Agent} instance must be created.
      *
@@ -2106,7 +2177,7 @@ declare module "node:http" {
      * overridden after this function is invoked. It's recommended to invoke it before any
      * requests are made and avoid invoking it in the middle of any requests.
      *
-     * See [Built-in Proxy Support](https://nodejs.org/docs/latest-v25.x/api/http.html#built-in-proxy-support) for details on proxy URL formats and `NO_PROXY`
+     * See [Built-in Proxy Support](https://nodejs.org/docs/latest-v26.x/api/http.html#built-in-proxy-support) for details on proxy URL formats and `NO_PROXY`
      * syntax.
      * @since v25.4.0
      * @param proxyEnv An object containing proxy configuration. This accepts the

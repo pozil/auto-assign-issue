@@ -1,0 +1,88 @@
+/**
+ * A single task that will be spawned
+ *
+ * @example "eslint --fix"
+ */
+type SpawnedTask = string
+
+type SyncGenerateTask<Result> = (files: readonly string[]) => Result
+
+type AsyncGenerateTask<Result> = (files: readonly string[]) => Promise<Result>
+
+/**
+ * A function that returns one or more tasks that will be spawned and run sequentially, in order.
+ * Tasks can be nested in one extra level of array to run them in parallel.
+ * The function receives list of the matched staged files as its argument and should return the
+ * complete command to be run, including passing filenames. Can be sync or async.
+ *
+ * @example <caption>Return a command after manipulating list of staged files</caption>
+ * (files: string) => `eslint --fix ${files.map((f) => `'${f}'`).join(' ')}`
+ *
+ * @example <caption>Ignore staged files and run "tsc" and "vitest" without any arguments</caption>
+ * () => ['tsc', 'vitest']
+ *
+ * @example <caption>Run "tsc" and "vitest" concurrently</caption>
+ * () => [['tsc', 'vitest']]
+ */
+type GenerateTask<Result = string | (string | string[])[]> =
+  | SyncGenerateTask<Result>
+  | AsyncGenerateTask<Result>
+
+/**
+ * List of tasks that will be run in parallel
+ *
+ * @example ["prettier --write", "eslint --fix"]
+ */
+type ParallelTasks = (SpawnedTask | GenerateTask<string>)[]
+
+/**
+ * List of tasks that will be run sequentially, in order
+ *
+ * @example ["prettier --write", "eslint --fix"]
+ */
+type SequentialTasks = (SpawnedTask | GenerateTask<string | string[]> | ParallelTasks)[]
+
+type TaskFunctionContext = {
+  /**
+   * Emit output from the task. All arguments of the call will be passed to Node.js `util.format()`.
+   * The output will only be shown on error, unless `--verbose` is used.
+   *
+   * @example log('Hello from task')
+   *
+   * @see https://nodejs.org/api/util.html#utilformatformat-args
+   */
+  log: (format: any, ...param: any[]) => void
+}
+
+/**
+ * A single Node.js/JavaScript task that defines its title and the function which will be
+ * run with the list of the matched staged files as its argument.
+ *
+ * @example
+ * {
+ *   title: 'Log staged files',
+ *   task: (files: readonly string[]) => {
+ *     console.log('Staged files:', files)
+ *   }
+ * }
+ */
+type TaskFunction = {
+  title: string
+  task: (filepaths: readonly string[], context: TaskFunctionContext) => void | Promise<void>
+}
+
+/** An entire `lint-staged` configuration, or a function that returns one */
+export type Configuration =
+  | Record<string, SpawnedTask | TaskFunction | GenerateTask | SequentialTasks>
+  | GenerateTask
+
+/**
+ * TypeScript helper to define `lint-staged` configuration.
+ * Use as the default export in a configuration file like `lint-staged.config.js`.
+ *
+ * @example
+ * export default defineConfig({
+ *   "*.js": ["prettier --check", "eslint"]
+ * })
+ */
+export function defineConfig(config: Configuration): Configuration

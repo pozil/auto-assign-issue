@@ -16,7 +16,7 @@ const debugLog = createDebug('lint-staged:generateTasks')
  * @param {boolean} [options.relative] - Whether filepaths to should be relative to cwd
  */
 export const generateTasks = ({ config, cwd = process.cwd(), files, relative = false }) => {
-  debugLog('Generating linter tasks')
+  debugLog('Generating tasks')
 
   /** @type {StagedFile[]} */
   const relativeFiles = files.map((file) => ({

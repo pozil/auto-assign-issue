@@ -180,14 +180,14 @@ declare module "node:test" {
             /**
              * Specifies the current working directory to be used by the test runner.
              * Serves as the base path for resolving files according to the
-             * [test runner execution model](https://nodejs.org/docs/latest-v25.x/api/test.html#test-runner-execution-model).
+             * [test runner execution model](https://nodejs.org/docs/latest-v26.x/api/test.html#test-runner-execution-model).
              * @since v23.0.0
              * @default process.cwd()
              */
             cwd?: string | undefined;
             /**
              * An array containing the list of files to run. If omitted, files are run according to the
-             * [test runner execution model](https://nodejs.org/docs/latest-v25.x/api/test.html#test-runner-execution-model).
+             * [test runner execution model](https://nodejs.org/docs/latest-v26.x/api/test.html#test-runner-execution-model).
              */
             files?: readonly string[] | undefined;
             /**
@@ -200,7 +200,7 @@ declare module "node:test" {
             /**
              * An array containing the list of glob patterns to match test files.
              * This option cannot be used together with `files`. If omitted, files are run according to the
-             * [test runner execution model](https://nodejs.org/docs/latest-v25.x/api/test.html#test-runner-execution-model).
+             * [test runner execution model](https://nodejs.org/docs/latest-v26.x/api/test.html#test-runner-execution-model).
              * @since v22.6.0
              */
             globPatterns?: readonly string[] | undefined;
@@ -265,6 +265,15 @@ declare module "node:test" {
              */
             testSkipPatterns?: string | RegExp | ReadonlyArray<string | RegExp> | undefined;
             /**
+             * A tag name, or an array of tag names,
+             * used to filter tests by their declared tags. Tests must contain every
+             * listed tag to run. Equivalent to passing `--experimental-test-tag-filter`
+             * on the command line. See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+             * @default undefined
+             * @since v26.2.0
+             */
+            testTagFilters?: string | readonly string[] | undefined;
+            /**
              * The number of milliseconds after which the test execution will fail.
              * If unspecified, subtests inherit this value from their parent.
              * @default Infinity
@@ -281,6 +290,20 @@ declare module "node:test" {
              */
             shard?: TestShard | undefined;
             /**
+             * Randomize execution order for test files and queued tests.
+             * This option is not supported with `watch: true`.
+             * @since v26.1.0
+             * @default false
+             */
+            randomize?: boolean | undefined;
+            /**
+             * Seed used when randomizing execution order. If this
+             * option is set, runs can replay the same randomized order deterministically,
+             * and setting this option also enables randomization. The value must be an
+             * integer between `0` and `4294967295`.
+             */
+            randomSeed?: number | undefined;
+            /**
              * A file path where the test runner will
              * store the state of the tests to allow rerunning only the failed tests on a next run.
              * @since v24.7.0
@@ -288,7 +311,7 @@ declare module "node:test" {
              */
             rerunFailuresFilePath?: string | undefined;
             /**
-             * enable [code coverage](https://nodejs.org/docs/latest-v25.x/api/test.html#collecting-code-coverage) collection.
+             * enable [code coverage](https://nodejs.org/docs/latest-v26.x/api/test.html#collecting-code-coverage) collection.
              * @since v22.10.0
              * @default false
              */
@@ -336,7 +359,7 @@ declare module "node:test" {
             functionCoverage?: number | undefined;
             /**
              * Specify environment variables to be passed along to the test process.
-             * This options is not compatible with `isolation='none'`. These variables will override
+             * This option is not compatible with `isolation='none'`. These variables will override
              * those from the main process, and are not merged with `process.env`.
              * @since v25.6.0
              * @default process.env
@@ -352,6 +375,7 @@ declare module "node:test" {
             "test:enqueue": [data: EventData.TestEnqueue];
             "test:fail": [data: EventData.TestFail];
             "test:interrupted": [data: EventData.TestInterrupted];
+            "test:log": [data: EventData.TestLog];
             "test:pass": [data: EventData.TestPass];
             "test:plan": [data: EventData.TestPlan];
             "test:start": [data: EventData.TestStart];
@@ -432,6 +456,13 @@ declare module "node:test" {
                  * `undefined` if the test was run through the REPL.
                  */
                 column?: number;
+                /**
+                 * The path of the test file that was
+                 * executed as the entry point of the child process that emitted this event.
+                 * Only present when tests run with process isolation. May differ from
+                 * `file` when the test is defined in a module imported by the entry file.
+                 */
+                entryFile?: string;
                 /**
                  * The path of the test file, `undefined` if test was run through the REPL.
                  */
@@ -655,6 +686,24 @@ declare module "node:test" {
                  */
                 nesting: number;
                 /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
+                /**
                  * The ordinal number of the test.
                  */
                 testNumber: number;
@@ -677,6 +726,24 @@ declare module "node:test" {
                  */
                 nesting: number;
                 /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
+                /**
                  * The test type. Either `'suite'` or `'test'`.
                  * @since v22.15.0
                  */
@@ -691,6 +758,24 @@ declare module "node:test" {
                  * The nesting level of the test.
                  */
                 nesting: number;
+                /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
                 /**
                  * The test type. Either `'suite'` or `'test'`.
                  * @since v22.15.0
@@ -731,6 +816,24 @@ declare module "node:test" {
                  */
                 nesting: number;
                 /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
+                /**
                  * The ordinal number of the test.
                  */
                 testNumber: number;
@@ -749,6 +852,36 @@ declare module "node:test" {
                  * interrupted tests.
                  */
                 tests: TestStart[];
+            }
+            interface TestLog extends LocationInfo {
+                /**
+                 * The structured payload passed to `context.log`, or
+                 * `undefined` if none was provided. The test runner does not interpret this
+                 * value.
+                 */
+                data: unknown;
+                /**
+                 * The log message.
+                 */
+                message: string;
+                /**
+                 * The test name.
+                 */
+                name: string;
+                /**
+                 * The nesting level of the test.
+                 */
+                nesting: number;
+                /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests.
+                 */
+                parentId: number | undefined;
+                /**
+                 * A numeric identifier for the test instance that emitted
+                 * the log message.
+                 */
+                testId: number;
             }
             interface TestPass extends LocationInfo {
                 /**
@@ -786,6 +919,24 @@ declare module "node:test" {
                  */
                 nesting: number;
                 /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
+                /**
                  * The ordinal number of the test.
                  */
                 testNumber: number;
@@ -817,6 +968,24 @@ declare module "node:test" {
                  * The nesting level of the test.
                  */
                 nesting: number;
+                /**
+                 * The `testId` of the enclosing test, or
+                 * `undefined` for top-level tests. Lets custom reporters track lineage
+                 * when concurrent siblings at the same nesting level interleave.
+                 */
+                parentId: number | undefined;
+                /**
+                 * The flattened lowercased tags declared on the test
+                 * and its ancestor suites, in declaration order. Empty for untagged tests.
+                 * See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+                 */
+                tags: string[];
+                /**
+                 * A numeric identifier for this test instance, unique
+                 * within the test file's process. Consistent across all events for the same
+                 * test instance, enabling reliable correlation in custom reporters.
+                 */
+                testId: number;
             }
             interface TestStderr {
                 /**
@@ -890,6 +1059,39 @@ declare module "node:test" {
                 success: boolean;
             }
         }
+        /**
+         * Returns the {@link TestContext} or {@link SuiteContext} object associated with the
+         * currently executing test or suite, or `undefined` if called outside of a test or
+         * suite. This function can be used to access context information from within the
+         * test or suite function or any async operations within them.
+
+         * ```js
+         * import { getTestContext } from 'node:test';
+         *
+         * test('example test', async () => {
+         *   const ctx = getTestContext();
+         *   console.log(`Running test: ${ctx.name}`);
+         * });
+         *
+         * describe('example suite', () => {
+         *   const ctx = getTestContext();
+         *   console.log(`Running suite: ${ctx.name}`);
+         * });
+         * ```
+         *
+         * When called from a test, returns a `TestContext`.
+         * When called from a suite, returns a `SuiteContext`.
+         *
+         * If called from outside a test or suite (e.g., at the top level of a module or in
+         * a setTimeout callback after execution has completed), this function returns
+         * `undefined`.
+         *
+         * When called from within a hook (before, beforeEach, after, afterEach), this
+         * function returns the context of the test or suite that the hook is associated
+         * with.
+         * @since v26.1.0
+         */
+        function getTestContext(): TestContext | SuiteContext | undefined;
         /**
          * An instance of `TestContext` is passed to each test function in order to
          * interact with the test runner. However, the `TestContext` constructor is not
@@ -967,6 +1169,25 @@ declare module "node:test" {
              */
             diagnostic(message: string): void;
             /**
+             * This function is used to write a log message to the output. Unlike
+             * `context.diagnostic`, the resulting `'test:log'` event is emitted
+             * immediately, in the order that the tests execute, rather than being buffered
+             * until the test reports its results. This function does not return a value.
+             *
+             * ```js
+             * test('top level test', (t) => {
+             *   t.log('fetched user', { userId: 42 });
+             *   t.log('retrying flaky endpoint', { attempt: 3 });
+             * });
+             * ```
+             * @since v26.6.0
+             * @param message Message to be reported.
+             * @param data Optional structured payload attached to the message. The test
+             * runner passes it through untouched. When tests run with process isolation,
+             * this value must be compatible with the [HTML structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm).
+             */
+            log(message: string, data?: unknown): void;
+            /**
              * The absolute path of the test file that created the current test. If a test file imports
              * additional modules that generate tests, the imported tests will return the path of the root test file.
              * @since v22.6.0
@@ -993,10 +1214,19 @@ declare module "node:test" {
              */
             readonly error: EventData.Error | null;
             /**
-             * Number of times the test has been attempted.
+             * The attempt number of the test. This value is zero-based, so the first attempt is `0`,
+             * the second attempt is `1`, and so on. This property is useful in conjunction with the
+             * `--test-rerun-failures` option to determine which attempt the test is currently running.
              * @since v21.7.0, v20.12.0
              */
             readonly attempt: number;
+            /**
+             * A frozen array of the test's flattened lowercased tags, in declaration
+             * order, including any tags inherited from ancestor suites. Empty when the
+             * test has no tags. See [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+             * @since v26.2.0
+             */
+            readonly tags: readonly string[];
             /**
              * The unique identifier of the worker running the current test file. This value is
              * derived from the `NODE_TEST_WORKER_ID` environment variable. When running tests
@@ -1193,7 +1423,7 @@ declare module "node:test" {
              * highlighting.
              * @since v22.14.0
              * @param value A value to serialize to a string. If Node.js was started with
-             * the [`--test-update-snapshots`](https://nodejs.org/docs/latest-v25.x/api/cli.html#--test-update-snapshots)
+             * the [`--test-update-snapshots`](https://nodejs.org/docs/latest-v26.x/api/cli.html#--test-update-snapshots)
              * flag, the serialized value is written to
              * `path`. Otherwise, the serialized value is compared to the contents of the
              * existing snapshot file.
@@ -1216,7 +1446,7 @@ declare module "node:test" {
              * ```
              * @since v22.3.0
              * @param value A value to serialize to a string. If Node.js was started with
-             * the [`--test-update-snapshots`](https://nodejs.org/docs/latest-v25.x/api/cli.html#--test-update-snapshots)
+             * the [`--test-update-snapshots`](https://nodejs.org/docs/latest-v26.x/api/cli.html#--test-update-snapshots)
              * flag, the serialized value is written to
              * the snapshot file. Otherwise, the serialized value is compared to the
              * corresponding value in the existing snapshot file.
@@ -1294,6 +1524,46 @@ declare module "node:test" {
              * @since v18.7.0, v16.17.0
              */
             readonly signal: AbortSignal;
+            /**
+             * Indicates whether the suite and all of its subtests have passed.
+             * @since v26.1.0
+             */
+            readonly passed: boolean;
+            /**
+             * The attempt number of the suite. This value is zero-based, so the first attempt is `0`,
+             * the second attempt is `1`, and so on. This property is useful in conjunction with the
+             * `--test-rerun-failures` option to determine the attempt number of the current run.
+             * @since v26.1.0
+             */
+            readonly attempt: number;
+            /**
+             * Output a diagnostic message. This is typically used for logging information
+             * about the current suite or its tests.
+             *
+             * ```js
+             * test.describe('my suite', (suite) => {
+             *   suite.diagnostic('Suite diagnostic message');
+             * });
+             * ```
+             * @since v26.1.0
+             * @param message A diagnostic message to output.
+             */
+            diagnostic(message: string): void;
+            /**
+             * Write a log message to the output. The resulting `'test:log'` event is
+             * emitted immediately, in the order that the tests execute.
+             *
+             * ```js
+             * test.describe('my suite', (suite) => {
+             *   suite.log('Suite log message');
+             * });
+             * ```
+             * @since v26.6.0
+             * @param message Message to be reported.
+             * @param data Optional structured payload attached to the message. The test
+             * runner passes it through untouched.
+             */
+            log(message: string, data?: unknown): void;
         }
         interface TestOptions {
             /**
@@ -1333,6 +1603,15 @@ declare module "node:test" {
              * @default false
              */
             skip?: boolean | string | undefined;
+            /**
+             * An array of string labels associated with the test.
+             * Used together with `--experimental-test-tag-filter` to filter which
+             * tests run. Tags inherit from suites to nested tests by union. See
+             * [Test tags](https://nodejs.org/docs/latest-v26.x/api/test.html#test-tags).
+             * @default []
+             * @since v26.2.0
+             */
+            tags?: readonly string[] | undefined;
             /**
              * A number of milliseconds the test will fail after. If unspecified, subtests inherit this
              * value from their parent.
@@ -1684,10 +1963,10 @@ declare module "node:test" {
              * This function is used to mock the exports of ECMAScript modules, CommonJS modules, JSON modules, and
              * Node.js builtin modules. Any references to the original module prior to mocking are not impacted. In
              * order to enable module mocking, Node.js must be started with the
-             * [`--experimental-test-module-mocks`](https://nodejs.org/docs/latest-v25.x/api/cli.html#--experimental-test-module-mocks)
+             * [`--experimental-test-module-mocks`](https://nodejs.org/docs/latest-v26.x/api/cli.html#--experimental-test-module-mocks)
              * command-line flag.
              *
-             * **Note**: [module customization hooks](https://nodejs.org/docs/latest-v25.x/api/module.html#customization-hooks) registered via the **synchronous** API effect resolution of
+             * **Note**: [module customization hooks](https://nodejs.org/docs/latest-v26.x/api/module.html#customization-hooks) registered via the **synchronous** API effect resolution of
              * the `specifier` provided to `mock.module`. Customization hooks registered via the **asynchronous**
              * API are currently ignored (because the test runner's loader is synchronous, and node does not
              * support multi-chain / cross-chain loading).

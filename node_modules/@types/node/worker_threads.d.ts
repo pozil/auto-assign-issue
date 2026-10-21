@@ -6,11 +6,12 @@ declare module "node:worker_threads" {
         NodeEventTarget,
     } from "node:events";
     import { FileHandle } from "node:fs/promises";
+    import { Server, Socket } from "node:net";
     import { Performance } from "node:perf_hooks";
     import { Readable, Writable } from "node:stream";
     import { ReadableStream, TransformStream, WritableStream } from "node:stream/web";
     import { URL } from "node:url";
-    import { CPUProfileHandle, HeapInfo, HeapProfileHandle } from "node:v8";
+    import { CPUProfileHandle, CPUProfileOptions, HeapInfo, HeapProfileHandle, HeapProfileOptions } from "node:v8";
     import { Context } from "node:vm";
     import { MessageEvent } from "undici-types";
     const isInternalThread: boolean;
@@ -22,9 +23,6 @@ declare module "node:worker_threads" {
     const threadName: string | null;
     const workerData: any;
     interface WorkerPerformance extends Pick<Performance, "eventLoopUtilization"> {}
-    /** @deprecated Use `import { Transferable } from "node:worker_threads"` instead. */
-    // TODO: remove in a future major @types/node version.
-    type TransferListItem = Transferable;
     interface WorkerOptions {
         /**
          * List of arguments which would be stringified and appended to
@@ -262,7 +260,7 @@ declare module "node:worker_threads" {
          *   `, { eval: true });
          *
          * worker.on('online', async () => {
-         *   const handle = await worker.startCpuProfile();
+         *   const handle = await worker.startCpuProfile({ sampleInterval: 1 });
          *   const profile = await handle.stop();
          *   console.log(profile);
          *   worker.terminate();
@@ -286,16 +284,16 @@ declare module "node:worker_threads" {
          * ```
          * @since v24.8.0
          */
-        startCpuProfile(): Promise<CPUProfileHandle>;
+        startCpuProfile(options?: CPUProfileOptions): Promise<CPUProfileHandle>;
         /**
          * Starting a Heap profile then return a Promise that fulfills with an error
          * or an `HeapProfileHandle` object. This API supports `await using` syntax.
          *
          * ```js
-         * const { Worker } = require('node:worker_threads');
+         * import { Worker } from 'node:worker_threads';
          *
          * const worker = new Worker(`
-         *   const { parentPort } = require('worker_threads');
+         *   const { parentPort } = require('node:worker_threads');
          *   parentPort.on('message', () => {});
          *   `, { eval: true });
          *
@@ -310,7 +308,7 @@ declare module "node:worker_threads" {
          * `await using` example.
          *
          * ```js
-         * const { Worker } = require('node:worker_threads');
+         * import { Worker } from 'node:worker_threads';
          *
          * const w = new Worker(`
          *   const { parentPort } = require('node:worker_threads');
@@ -322,8 +320,9 @@ declare module "node:worker_threads" {
          *   await using handle = await w.startHeapProfile();
          * });
          * ```
+         * @since v24.9.0
          */
-        startHeapProfile(): Promise<HeapProfileHandle>;
+        startHeapProfile(options?: HeapProfileOptions): Promise<HeapProfileHandle>;
         /**
          * Calls `worker.terminate()` when the dispose scope is exited.
          *
@@ -340,13 +339,13 @@ declare module "node:worker_threads" {
     interface Worker extends InternalEventEmitter<WorkerEventMap> {}
     /**
      * Mark an object as not transferable. If `object` occurs in the transfer list of
-     * a [`port.postMessage()`](https://nodejs.org/docs/latest-v25.x/api/worker_threads.html#portpostmessagevalue-transferlist) call, an error is thrown. This is a no-op if
+     * a [`port.postMessage()`](https://nodejs.org/docs/latest-v26.x/api/worker_threads.html#portpostmessagevalue-transferlist) call, an error is thrown. This is a no-op if
      * `object` is a primitive value.
      *
      * In particular, this makes sense for objects that can be cloned, rather than
      * transferred, and which are used by other objects on the sending side.
      * For example, Node.js marks the `ArrayBuffer`s it uses for its
-     * [`Buffer` pool](https://nodejs.org/docs/latest-v25.x/api/buffer.html#static-method-bufferallocunsafesize) with this.
+     * [`Buffer` pool](https://nodejs.org/docs/latest-v26.x/api/buffer.html#static-method-bufferallocunsafesize) with this.
      * `ArrayBuffer.prototype.transfer()` is disallowed on such array buffer
      * instances.
      *
@@ -516,7 +515,9 @@ declare module "node:worker_threads" {
         | FileHandle
         | ReadableStream
         | WritableStream
-        | TransformStream;
+        | TransformStream
+        | Server
+        | Socket;
     interface LockGrantedCallback<T> {
         (lock: Lock | null): T;
     }
