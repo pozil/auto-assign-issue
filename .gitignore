@@ -1,6 +1,9 @@
 # Eslint cache
 .eslintcache
 
+# Dependencies
+/node_modules
+
 # MacOS system files
 .DS_Store
 
